@@ -140,10 +140,11 @@ class Clear_Pop_Cookie_Manager {
     /**
      * Record popup close event with method
      *
-     * @param int    $popup_id Popup post ID
-     * @param string $method   Close method (x_button, overlay, escape)
+     * @param int    $popup_id         Popup post ID
+     * @param string $method           Close method (x_button, overlay, escape)
+     * @param string $duration_setting Duration setting (optional, fetches from meta if not provided)
      */
-    public function record_popup_closed($popup_id, $method) {
+    public function record_popup_closed($popup_id, $method, $duration_setting = '') {
         $cookie_name = self::COOKIE_PREFIX . $popup_id;
         $cookie_data = $this->get_cookie_data($popup_id);
 
@@ -151,8 +152,10 @@ class Clear_Pop_Cookie_Manager {
         $cookie_data['closed_method'] = sanitize_text_field($method);
         $cookie_data['last_closed'] = time();
 
-        // Get duration setting from post meta
-        $duration_setting = get_post_meta($popup_id, '_cookie_duration', true);
+        // Get duration setting (use provided or fetch from post meta)
+        if (empty($duration_setting)) {
+            $duration_setting = get_post_meta($popup_id, '_cookie_duration', true);
+        }
         if (empty($duration_setting)) {
             $duration_setting = 'never'; // Default
         }

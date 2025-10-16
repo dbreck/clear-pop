@@ -34,12 +34,20 @@ class Clear_Pop_Modal_Renderer {
             'orderby'        => 'date',
             'order'          => 'DESC',
         ));
-        
+
         if (empty($popups)) {
             return;
         }
-        
+
+        // Get trigger handler for cookie checking
+        $trigger_handler = Clear_Pop_Trigger_Handler::get_instance();
+
         foreach ($popups as $popup) {
+            // Check if popup should be shown based on cookies
+            if (!$trigger_handler->should_render_popup($popup->ID)) {
+                continue; // Skip rendering this popup
+            }
+
             $this->render_single_popup($popup);
         }
     }

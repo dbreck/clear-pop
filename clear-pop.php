@@ -48,6 +48,7 @@ class Clear_Pop_Plugin {
         require_once CLEAR_POP_PLUGIN_DIR . 'includes/class-modal-renderer.php';
         require_once CLEAR_POP_PLUGIN_DIR . 'includes/class-assets.php';
         require_once CLEAR_POP_PLUGIN_DIR . 'includes/class-cookie-manager.php';
+        require_once CLEAR_POP_PLUGIN_DIR . 'includes/class-trigger-handler.php';
     }
     
     /**
@@ -58,6 +59,7 @@ class Clear_Pop_Plugin {
         Clear_Pop_Metabox::get_instance();
         Clear_Pop_Modal_Renderer::get_instance();
         Clear_Pop_Assets::get_instance();
+        Clear_Pop_Trigger_Handler::get_instance();
     }
 }
 
