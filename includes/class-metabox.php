@@ -444,6 +444,29 @@ class Clear_Pop_Metabox {
             </div>
         </div>
 
+        <div class="trigger-section-divider"></div>
+
+        <!-- Trigger Preview -->
+        <div class="trigger-setting-field">
+            <label><?php _e('Active Triggers Summary', 'clear-pop'); ?></label>
+            <div id="trigger-preview" style="padding: 12px; background: #f9f9f9; border-radius: 4px; font-size: 13px; line-height: 1.6;">
+                <em><?php _e('Enable triggers above to see summary...', 'clear-pop'); ?></em>
+            </div>
+        </div>
+
+        <!-- Clear Cookie Button (only show if popup is published) -->
+        <?php if ($post->post_status === 'publish') : ?>
+        <div class="trigger-section-divider"></div>
+        <div class="trigger-setting-field">
+            <label><?php _e('Testing Tools', 'clear-pop'); ?></label>
+            <button type="button" id="clear_popup_cookie" class="button" style="margin-top: 8px;">
+                <?php _e('Clear Cookie for Testing', 'clear-pop'); ?>
+            </button>
+            <small><?php _e('Clears the cookie so you can test this popup again immediately.', 'clear-pop'); ?></small>
+            <div id="clear_cookie_message" style="margin-top: 8px; padding: 8px; display: none; border-radius: 4px;"></div>
+        </div>
+        <?php endif; ?>
+
         <script>
             (function() {
                 // Handle time delay checkbox
@@ -514,6 +537,121 @@ class Clear_Pop_Metabox {
 
                 // Initialize on page load
                 updateLogicVisibility();
+
+                // Update trigger preview
+                function updateTriggerPreview() {
+                    const preview = document.getElementById('trigger-preview');
+                    if (!preview) return;
+
+                    const triggers = [];
+
+                    if (timeCheckbox && timeCheckbox.checked && parseInt(timeInput.value) > 0) {
+                        triggers.push('After <strong>' + timeInput.value + ' seconds</strong> on page');
+                    }
+
+                    if (scrollCheckbox && scrollCheckbox.checked && parseInt(scrollInput.value) > 0) {
+                        triggers.push('After scrolling <strong>' + scrollInput.value + '%</strong> down page');
+                    }
+
+                    const firstVisit = document.getElementById('trigger_first_visit');
+                    if (firstVisit && firstVisit.checked) {
+                        triggers.push('On <strong>first visit only</strong>');
+                    }
+
+                    const exitIntent = document.getElementById('trigger_exit_intent');
+                    if (exitIntent && exitIntent.checked) {
+                        triggers.push('When cursor moves toward <strong>browser top</strong> (desktop)');
+                    }
+
+                    if (triggers.length === 0) {
+                        preview.innerHTML = '<em>This popup uses manual triggers only (click to open).</em>';
+                        return;
+                    }
+
+                    // Get logic
+                    const logicAny = document.getElementById('trigger_logic_any');
+                    const logic = (logicAny && logicAny.checked) ? 'ANY' : 'ALL';
+                    const logicText = triggers.length > 1
+                        ? '<strong>' + logic + '</strong> of the following:<br>'
+                        : '';
+
+                    preview.innerHTML = 'This popup will automatically show when ' + logicText +
+                        '<ul style="margin: 8px 0 0 20px;">' +
+                        triggers.map(t => '<li>' + t + '</li>').join('') +
+                        '</ul>';
+                }
+
+                // Attach listeners for preview updates
+                if (timeCheckbox) timeCheckbox.addEventListener('change', updateTriggerPreview);
+                if (timeInput) timeInput.addEventListener('input', updateTriggerPreview);
+                if (scrollCheckbox) scrollCheckbox.addEventListener('change', updateTriggerPreview);
+                if (scrollInput) scrollInput.addEventListener('input', updateTriggerPreview);
+                const firstVisit = document.getElementById('trigger_first_visit');
+                if (firstVisit) firstVisit.addEventListener('change', updateTriggerPreview);
+                const exitIntent = document.getElementById('trigger_exit_intent');
+                if (exitIntent) exitIntent.addEventListener('change', updateTriggerPreview);
+                const logicRadios = document.querySelectorAll('input[name="trigger_logic"]');
+                logicRadios.forEach(radio => radio.addEventListener('change', updateTriggerPreview));
+
+                // Initialize preview
+                updateTriggerPreview();
+
+                // Clear cookie button handler
+                const clearCookieBtn = document.getElementById('clear_popup_cookie');
+                if (clearCookieBtn) {
+                    clearCookieBtn.addEventListener('click', function() {
+                        const postId = <?php echo absint($post->ID); ?>;
+                        const messageDiv = document.getElementById('clear_cookie_message');
+
+                        clearCookieBtn.disabled = true;
+                        clearCookieBtn.textContent = 'Clearing...';
+
+                        fetch(ajaxurl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: 'action=clear_pop_cookie&popup_id=' + postId + '&nonce=<?php echo wp_create_nonce('clear_pop_cookie_' . $post->ID); ?>'
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            clearCookieBtn.disabled = false;
+                            clearCookieBtn.textContent = 'Clear Cookie for Testing';
+
+                            if (data.success) {
+                                messageDiv.style.display = 'block';
+                                messageDiv.style.background = '#d4edda';
+                                messageDiv.style.color = '#155724';
+                                messageDiv.style.border = '1px solid #c3e6cb';
+                                messageDiv.textContent = 'Cookie cleared successfully! You can now test this popup again.';
+
+                                setTimeout(() => {
+                                    messageDiv.style.display = 'none';
+                                }, 5000);
+                            } else {
+                                messageDiv.style.display = 'block';
+                                messageDiv.style.background = '#f8d7da';
+                                messageDiv.style.color = '#721c24';
+                                messageDiv.style.border = '1px solid #f5c6cb';
+                                messageDiv.textContent = 'Error: ' + (data.data || 'Failed to clear cookie');
+
+                                setTimeout(() => {
+                                    messageDiv.style.display = 'none';
+                                }, 5000);
+                            }
+                        })
+                        .catch(error => {
+                            clearCookieBtn.disabled = false;
+                            clearCookieBtn.textContent = 'Clear Cookie for Testing';
+
+                            messageDiv.style.display = 'block';
+                            messageDiv.style.background = '#f8d7da';
+                            messageDiv.style.color = '#721c24';
+                            messageDiv.style.border = '1px solid #f5c6cb';
+                            messageDiv.textContent = 'Error: ' + error.message;
+                        });
+                    });
+                }
             })();
         </script>
         <?php

@@ -23,6 +23,9 @@ class Clear_Pop_Trigger_Handler {
         // AJAX handlers for close tracking
         add_action('wp_ajax_clear_pop_close', array($this, 'handle_popup_close'));
         add_action('wp_ajax_nopriv_clear_pop_close', array($this, 'handle_popup_close'));
+
+        // AJAX handler for clearing cookies (admin only)
+        add_action('wp_ajax_clear_pop_cookie', array($this, 'handle_clear_cookie'));
     }
 
     /**
@@ -114,5 +117,39 @@ class Clear_Pop_Trigger_Handler {
         $cookie_duration = get_post_meta($popup_id, '_cookie_duration', true) ?: 'never';
 
         return $cookie_manager->should_show_popup($popup_id, $cookie_duration);
+    }
+
+    /**
+     * Handle AJAX request to clear popup cookie (admin only)
+     */
+    public function handle_clear_cookie() {
+        // Verify nonce
+        $popup_id = isset($_POST['popup_id']) ? absint($_POST['popup_id']) : 0;
+
+        if (!$popup_id) {
+            wp_send_json_error('Invalid popup ID');
+            return;
+        }
+
+        $nonce = isset($_POST['nonce']) ? $_POST['nonce'] : '';
+        if (!wp_verify_nonce($nonce, 'clear_pop_cookie_' . $popup_id)) {
+            wp_send_json_error('Security check failed');
+            return;
+        }
+
+        // Check user capability
+        if (!current_user_can('edit_post', $popup_id)) {
+            wp_send_json_error('Permission denied');
+            return;
+        }
+
+        // Clear the cookie
+        $cookie_manager = Clear_Pop_Cookie_Manager::get_instance();
+        $cookie_manager->clear_popup_cookie($popup_id);
+
+        wp_send_json_success(array(
+            'message' => 'Cookie cleared successfully',
+            'popup_id' => $popup_id,
+        ));
     }
 }

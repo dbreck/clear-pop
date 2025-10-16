@@ -1,5 +1,35 @@
 # Clear Pop - Changelog
 
+## [1.2.0] - 2025-10-16
+
+### Added
+- **Automatic Display Triggers** - Show popups based on user behavior conditions
+  - Time delay (show after X seconds)
+  - Scroll depth (show after X% scroll)
+  - First visit detection (one-time cookie)
+  - Exit intent (desktop only, cursor near top)
+- **Trigger Logic** - Configure how multiple triggers work together
+  - ANY conditions (show on first trigger)
+  - ALL conditions (wait for all triggers)
+- **Cookie Management** - Control show frequency after user closes popup
+  - Never show again (10 year cookie)
+  - Show after same session (session cookie)
+  - Show after 1 hour, 24 hours, 7 days, or 30 days
+- **Manual triggers still work** - Click-to-open unchanged (`hsp-popup-trigger-{id}`)
+- **Testing Tools** - Clear cookie button in admin for testing automatic triggers
+- **Trigger Preview** - Live summary in admin showing active triggers
+
+### Technical
+- New class: `Clear_Pop_Cookie_Manager` - Cookie-based view tracking
+- New class: `Clear_Pop_Trigger_Handler` - AJAX endpoints and trigger logic
+- New file: `assets/js/triggers.js` - Client-side trigger evaluation
+- AJAX endpoint `clear_pop_close` for close tracking
+- AJAX endpoint `clear_pop_cookie` for testing (admin only)
+- Popups respect cookies and skip rendering if already shown
+- JavaScript reads cookies to prevent unnecessary popup displays
+- Throttled scroll handler for performance
+- Backwards compatible with existing popups
+
 ## [1.1.0] - 2025-10-16
 
 ### Added

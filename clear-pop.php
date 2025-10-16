@@ -3,7 +3,7 @@
  * Plugin Name: Clear Pop
  * Plugin URI: https://clearph.com
  * Description: Clean, simple popup modal system for WordPress with WPBakery support
- * Version: 1.1.0
+ * Version: 1.2.0
  * Author: Danny Breckenridge
  * Author URI: https://clearph.com
  * Text Domain: clear-pop
@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('CLEAR_POP_VERSION', '1.1.0');
+define('CLEAR_POP_VERSION', '1.2.0');
 define('CLEAR_POP_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('CLEAR_POP_PLUGIN_URL', plugin_dir_url(__FILE__));
 
