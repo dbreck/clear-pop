@@ -47,6 +47,7 @@ class Clear_Pop_Plugin {
         require_once CLEAR_POP_PLUGIN_DIR . 'includes/class-metabox.php';
         require_once CLEAR_POP_PLUGIN_DIR . 'includes/class-modal-renderer.php';
         require_once CLEAR_POP_PLUGIN_DIR . 'includes/class-assets.php';
+        require_once CLEAR_POP_PLUGIN_DIR . 'includes/class-cookie-manager.php';
     }
     
     /**
