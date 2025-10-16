@@ -36,18 +36,18 @@ class Clear_Pop_Assets {
             'posts_per_page' => 1,
             'fields'         => 'ids',
         ));
-        
+
         if (empty($popups)) {
             return;
         }
-        
+
         wp_enqueue_style(
             'clear-pop-css',
             CLEAR_POP_PLUGIN_URL . 'assets/css/modal.css',
             array(),
             CLEAR_POP_VERSION
         );
-        
+
         wp_enqueue_script(
             'clear-pop-js',
             CLEAR_POP_PLUGIN_URL . 'assets/js/modal.js',
@@ -55,7 +55,32 @@ class Clear_Pop_Assets {
             CLEAR_POP_VERSION,
             true
         );
-        
+
+        // Enqueue triggers.js for automatic display triggers
+        wp_enqueue_script(
+            'clear-pop-triggers',
+            CLEAR_POP_PLUGIN_URL . 'assets/js/triggers.js',
+            array('clear-pop-js'),
+            CLEAR_POP_VERSION,
+            true
+        );
+
+        // Localize trigger data
+        wp_localize_script(
+            'clear-pop-triggers',
+            'clearPopTriggers',
+            $this->get_trigger_data()
+        );
+
+        // Localize AJAX URL
+        wp_localize_script(
+            'clear-pop-triggers',
+            'clearPopAjax',
+            array(
+                'ajax_url' => admin_url('admin-ajax.php')
+            )
+        );
+
         add_action('wp_head', array($this, 'output_salient_popup_css'), 999);
     }
     
@@ -203,20 +228,20 @@ class Clear_Pop_Assets {
      */
     private function generate_salient_padding_fallback($popup_ids) {
         $css = '';
-        
+
         foreach ($popup_ids as $popup_id) {
             $content = get_post_field('post_content', $popup_id);
-            
+
             if (!is_string($content) || '' === trim($content)) {
                 continue;
             }
-            
+
             preg_match_all('/\[vc_column([^\]]+)\]/', $content, $matches);
-            
+
             if (empty($matches[1])) {
                 continue;
             }
-            
+
             foreach ($matches[1] as $attrs) {
                 $padding_attrs = array(
                     'left_padding'   => 'padding-left',
@@ -224,7 +249,7 @@ class Clear_Pop_Assets {
                     'top_padding'    => 'padding-top',
                     'bottom_padding' => 'padding-bottom',
                 );
-                
+
                 foreach ($padding_attrs as $attr => $css_prop) {
                     if (preg_match('/' . $attr . '="([^"]+)"/', $attrs, $value_match)) {
                         $value = $value_match[1];
@@ -234,7 +259,50 @@ class Clear_Pop_Assets {
                 }
             }
         }
-        
+
         return $css;
+    }
+
+    /**
+     * Get trigger data for JavaScript localization
+     *
+     * @return array
+     */
+    private function get_trigger_data() {
+        $trigger_data = array();
+
+        $popups = get_posts(array(
+            'post_type'      => 'hsp_popup',
+            'post_status'    => 'publish',
+            'posts_per_page' => -1,
+            'fields'         => 'ids',
+        ));
+
+        if (empty($popups)) {
+            return $trigger_data;
+        }
+
+        foreach ($popups as $popup_id) {
+            $time_delay = absint(get_post_meta($popup_id, '_trigger_time_delay', true));
+            $scroll_depth = absint(get_post_meta($popup_id, '_trigger_scroll_depth', true));
+            $first_visit = get_post_meta($popup_id, '_trigger_first_visit', true);
+            $exit_intent = get_post_meta($popup_id, '_trigger_exit_intent', true);
+            $trigger_logic = get_post_meta($popup_id, '_trigger_logic', true) ?: 'any';
+            $cookie_duration = get_post_meta($popup_id, '_cookie_duration', true) ?: 'never';
+
+            // Only add to localized data if at least one trigger is enabled
+            if ($time_delay > 0 || $scroll_depth > 0 || $first_visit === '1' || $exit_intent === '1') {
+                $trigger_data[$popup_id] = array(
+                    'time_delay'      => $time_delay,
+                    'scroll_depth'    => $scroll_depth,
+                    'first_visit'     => $first_visit === '1',
+                    'exit_intent'     => $exit_intent === '1',
+                    'logic'           => $trigger_logic,
+                    'cookie_duration' => $cookie_duration,
+                );
+            }
+        }
+
+        return $trigger_data;
     }
 }
