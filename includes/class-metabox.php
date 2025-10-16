@@ -322,7 +322,8 @@ class Clear_Pop_Metabox {
                         id="trigger_time_delay"
                         min="0"
                         max="120"
-                        value="<?php echo esc_attr($time_delay ?: 5); ?>"
+                        value="<?php echo esc_attr($time_delay ? $time_delay : 0); ?>"
+                        data-default="5"
                         style="width: 70px;"
                     />
                     <?php _e('seconds on page', 'clear-pop'); ?>
@@ -341,7 +342,8 @@ class Clear_Pop_Metabox {
                         id="trigger_scroll_depth"
                         min="0"
                         max="100"
-                        value="<?php echo esc_attr($scroll_depth ?: 50); ?>"
+                        value="<?php echo esc_attr($scroll_depth ? $scroll_depth : 0); ?>"
+                        data-default="50"
                         style="width: 70px;"
                     />
                     <?php _e('% down page', 'clear-pop'); ?>
@@ -476,10 +478,12 @@ class Clear_Pop_Metabox {
                 function updateTimeDelay() {
                     if (!timeCheckbox.checked) {
                         const currentValue = timeInput.value;
-                        timeInput.setAttribute('data-prev-value', currentValue || '5');
+                        if (currentValue && currentValue !== '0') {
+                            timeInput.setAttribute('data-prev-value', currentValue);
+                        }
                         timeInput.value = '0';
                     } else {
-                        const prevValue = timeInput.getAttribute('data-prev-value') || '5';
+                        const prevValue = timeInput.getAttribute('data-prev-value') || timeInput.getAttribute('data-default') || '5';
                         timeInput.value = prevValue;
                     }
                     updateLogicVisibility();
@@ -496,10 +500,12 @@ class Clear_Pop_Metabox {
                 function updateScrollDepth() {
                     if (!scrollCheckbox.checked) {
                         const currentValue = scrollInput.value;
-                        scrollInput.setAttribute('data-prev-value', currentValue || '50');
+                        if (currentValue && currentValue !== '0') {
+                            scrollInput.setAttribute('data-prev-value', currentValue);
+                        }
                         scrollInput.value = '0';
                     } else {
-                        const prevValue = scrollInput.getAttribute('data-prev-value') || '50';
+                        const prevValue = scrollInput.getAttribute('data-prev-value') || scrollInput.getAttribute('data-default') || '50';
                         scrollInput.value = prevValue;
                     }
                     updateLogicVisibility();
