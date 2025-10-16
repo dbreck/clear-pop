@@ -471,9 +471,13 @@ class Clear_Pop_Metabox {
 
         <script>
             (function() {
-                // Handle time delay checkbox
+                // Get all DOM elements
                 const timeCheckbox = document.getElementById('enable_time_delay');
                 const timeInput = document.getElementById('trigger_time_delay');
+                const scrollCheckbox = document.getElementById('enable_scroll_depth');
+                const scrollInput = document.getElementById('trigger_scroll_depth');
+                const firstVisit = document.getElementById('trigger_first_visit');
+                const exitIntent = document.getElementById('trigger_exit_intent');
 
                 function updateTimeDelay() {
                     if (!timeCheckbox.checked) {
@@ -492,10 +496,6 @@ class Clear_Pop_Metabox {
                 if (timeCheckbox) {
                     timeCheckbox.addEventListener('change', updateTimeDelay);
                 }
-
-                // Handle scroll depth checkbox
-                const scrollCheckbox = document.getElementById('enable_scroll_depth');
-                const scrollInput = document.getElementById('trigger_scroll_depth');
 
                 function updateScrollDepth() {
                     if (!scrollCheckbox.checked) {
@@ -521,11 +521,7 @@ class Clear_Pop_Metabox {
 
                     if (timeCheckbox && timeCheckbox.checked && parseInt(timeInput.value) > 0) enabledCount++;
                     if (scrollCheckbox && scrollCheckbox.checked && parseInt(scrollInput.value) > 0) enabledCount++;
-
-                    const firstVisit = document.getElementById('trigger_first_visit');
                     if (firstVisit && firstVisit.checked) enabledCount++;
-
-                    const exitIntent = document.getElementById('trigger_exit_intent');
                     if (exitIntent && exitIntent.checked) enabledCount++;
 
                     const logicSection = document.getElementById('trigger_logic_section');
@@ -535,9 +531,6 @@ class Clear_Pop_Metabox {
                 }
 
                 // Attach change listeners to all trigger checkboxes
-                const firstVisit = document.getElementById('trigger_first_visit');
-                const exitIntent = document.getElementById('trigger_exit_intent');
-
                 if (firstVisit) firstVisit.addEventListener('change', updateLogicVisibility);
                 if (exitIntent) exitIntent.addEventListener('change', updateLogicVisibility);
 
@@ -559,12 +552,10 @@ class Clear_Pop_Metabox {
                         triggers.push('After scrolling <strong>' + scrollInput.value + '%</strong> down page');
                     }
 
-                    const firstVisit = document.getElementById('trigger_first_visit');
                     if (firstVisit && firstVisit.checked) {
                         triggers.push('On <strong>first visit only</strong>');
                     }
 
-                    const exitIntent = document.getElementById('trigger_exit_intent');
                     if (exitIntent && exitIntent.checked) {
                         triggers.push('When cursor moves toward <strong>browser top</strong> (desktop)');
                     }
@@ -592,9 +583,7 @@ class Clear_Pop_Metabox {
                 if (timeInput) timeInput.addEventListener('input', updateTriggerPreview);
                 if (scrollCheckbox) scrollCheckbox.addEventListener('change', updateTriggerPreview);
                 if (scrollInput) scrollInput.addEventListener('input', updateTriggerPreview);
-                const firstVisit = document.getElementById('trigger_first_visit');
                 if (firstVisit) firstVisit.addEventListener('change', updateTriggerPreview);
-                const exitIntent = document.getElementById('trigger_exit_intent');
                 if (exitIntent) exitIntent.addEventListener('change', updateTriggerPreview);
                 const logicRadios = document.querySelectorAll('input[name="trigger_logic"]');
                 logicRadios.forEach(radio => radio.addEventListener('change', updateTriggerPreview));
