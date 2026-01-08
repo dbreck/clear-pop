@@ -20,6 +20,18 @@ define('CLEAR_POP_VERSION', '1.2.0');
 define('CLEAR_POP_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('CLEAR_POP_PLUGIN_URL', plugin_dir_url(__FILE__));
 
+// GitHub auto-updates
+require_once CLEAR_POP_PLUGIN_DIR . 'vendor/plugin-update-checker/plugin-update-checker.php';
+use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
+
+$clear_pop_update_checker = PucFactory::buildUpdateChecker(
+    'https://github.com/dbreck/clear-pop/',
+    __FILE__,
+    'clear-pop'
+);
+$clear_pop_update_checker->setBranch('main');
+$clear_pop_update_checker->getVcsApi()->enableReleaseAssets();
+
 /**
  * Main Plugin Class
  */

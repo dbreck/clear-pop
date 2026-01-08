@@ -59,3 +59,9 @@ The plugin modifies `wpb_js_content_types` option on activation to add `hsp_popu
 - No test framework configured
 - Checkbox meta fields require special save handling (explicit check for `isset($_POST[$field])`)
 - Assets only load when published `hsp_popup` posts exist
+
+## Auto-Updates
+
+Uses [Plugin Update Checker](https://github.com/YahnisElsts/plugin-update-checker) v5.5 for GitHub-based updates. To trigger an update:
+1. Update `CLEAR_POP_VERSION` in `clear-pop.php`
+2. Create a GitHub release with tag matching the version (e.g., `v1.3.0` or `1.3.0`)
