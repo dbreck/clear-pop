@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-Clear Pop is a WordPress plugin providing a popup modal system with WPBakery Page Builder integration, designed for the Salient theme. Version 1.2.0.
+Clear Pop is a WordPress plugin providing a popup modal system with WPBakery Page Builder integration, designed for the Salient theme.
 
 ## Architecture
 
@@ -53,6 +53,14 @@ window.hspPopup.closeAll();
 
 The plugin modifies `wpb_js_content_types` option on activation to add `hsp_popup`. Tab initialization uses `:nth-of-type()` selectors (not `:nth-child()`) to correctly skip the `<ul>` nav element when targeting `.wpb_tab` panels.
 
+## Salient Theme Gotchas
+
+**Avoid these Salient CSS classes** on popup elements - they trigger Salient's JavaScript which injects unwanted inline styles:
+- `container-wrap` - Injects `min-height`, `padding-top`, `padding-bottom`
+- Other layout classes may have similar issues
+
+The `nectar-global-section` class on `.hsp-popup-content` is intentional and needed for proper Salient/WPBakery element rendering.
+
 ## Development Notes
 
 - No build process required - vanilla PHP/JS/CSS
@@ -60,8 +68,16 @@ The plugin modifies `wpb_js_content_types` option on activation to add `hsp_popu
 - Checkbox meta fields require special save handling (explicit check for `isset($_POST[$field])`)
 - Assets only load when published `hsp_popup` posts exist
 
-## Auto-Updates
+## Releases & Auto-Updates
 
-Uses [Plugin Update Checker](https://github.com/YahnisElsts/plugin-update-checker) v5.5 for GitHub-based updates. To trigger an update:
-1. Update `CLEAR_POP_VERSION` in `clear-pop.php`
-2. Create a GitHub release with tag matching the version (e.g., `v1.3.0` or `1.3.0`)
+Uses [Plugin Update Checker](https://github.com/YahnisElsts/plugin-update-checker) v5.5 for GitHub-based updates.
+
+**Release process:**
+1. Update version in `clear-pop.php` (header comment AND `CLEAR_POP_VERSION` constant)
+2. Update `Stable tag` and changelog in `readme.txt`
+3. Commit and push
+4. Create release zip (exclude dev files):
+   ```bash
+   zip -r /tmp/clear-pop.zip . -x "*.git*" -x "*.claude*" -x "*notes/*" -x "CLAUDE.md" -x "cc_phase1_tasklist.md" -x "*.DS_Store" -x "README.md"
+   ```
+5. Create GitHub release with tag `v{version}` and attach `clear-pop.zip` (not versioned filename)
