@@ -64,6 +64,9 @@ class Clear_Pop_Metabox {
         
         // Get saved values
         $size = get_post_meta($post->ID, '_popup_size', true) ?: 'medium';
+        $height_mode = get_post_meta($post->ID, '_popup_height_mode', true) ?: 'auto';
+        $height_value = get_post_meta($post->ID, '_popup_height_value', true);
+        $height_unit = get_post_meta($post->ID, '_popup_height_unit', true) ?: 'vh';
         $bg_color = get_post_meta($post->ID, '_popup_bg_color', true) ?: '#000000';
         $bg_opacity = get_post_meta($post->ID, '_popup_bg_opacity', true) ?: '0.8';
         $close_position = get_post_meta($post->ID, '_popup_close_position', true) ?: 'top-right';
@@ -121,7 +124,33 @@ class Clear_Pop_Metabox {
                 </select>
                 <small><?php _e('Width of the modal window', 'clear-pop'); ?></small>
             </div>
-            
+
+            <div class="popup-setting-field">
+                <label for="popup_height_mode"><?php _e('Modal Height', 'clear-pop'); ?></label>
+                <select name="popup_height_mode" id="popup_height_mode">
+                    <option value="auto" <?php selected($height_mode, 'auto'); ?>><?php _e('Auto (fit content)', 'clear-pop'); ?></option>
+                    <option value="fixed" <?php selected($height_mode, 'fixed'); ?>><?php _e('Fixed', 'clear-pop'); ?></option>
+                </select>
+                <div id="popup_height_fixed_options" style="display: <?php echo $height_mode === 'fixed' ? 'grid' : 'none'; ?>; grid-template-columns: 1fr 80px; gap: 10px; margin-top: 8px;">
+                    <input
+                        type="number"
+                        name="popup_height_value"
+                        id="popup_height_value"
+                        min="1"
+                        max="100"
+                        step="1"
+                        placeholder="60"
+                        value="<?php echo esc_attr($height_value); ?>"
+                    />
+                    <select name="popup_height_unit" id="popup_height_unit">
+                        <option value="vh" <?php selected($height_unit, 'vh'); ?>>vh</option>
+                        <option value="px" <?php selected($height_unit, 'px'); ?>>px</option>
+                        <option value="%" <?php selected($height_unit, '%'); ?>>%</option>
+                    </select>
+                </div>
+                <small><?php _e('Auto scales to content (max 90vh). Fixed sets exact height.', 'clear-pop'); ?></small>
+            </div>
+
             <div class="popup-setting-field">
                 <label for="popup_close_position"><?php _e('Close Button Position', 'clear-pop'); ?></label>
                 <select name="popup_close_position" id="popup_close_position">
@@ -200,6 +229,16 @@ class Clear_Pop_Metabox {
         <script>
             jQuery(document).ready(function($) {
                 $('.popup-color-picker').wpColorPicker();
+
+                // Height mode toggle
+                var heightMode = document.getElementById('popup_height_mode');
+                var heightOptions = document.getElementById('popup_height_fixed_options');
+
+                if (heightMode && heightOptions) {
+                    heightMode.addEventListener('change', function() {
+                        heightOptions.style.display = this.value === 'fixed' ? 'grid' : 'none';
+                    });
+                }
             });
         </script>
         <?php
@@ -674,6 +713,9 @@ class Clear_Pop_Metabox {
         // Save popup settings fields
         $fields = array(
             'popup_size',
+            'popup_height_mode',
+            'popup_height_value',
+            'popup_height_unit',
             'popup_bg_color',
             'popup_bg_opacity',
             'popup_close_position',
@@ -714,6 +756,24 @@ class Clear_Pop_Metabox {
                 continue;
             }
 
+            if ('popup_height_value' === $field) {
+                $raw = trim(wp_unslash($_POST[$field]));
+
+                if ($raw === '') {
+                    delete_post_meta($post_id, '_' . $field);
+                    continue;
+                }
+
+                $number = floatval($raw);
+
+                if ($number < 1) {
+                    $number = 1;
+                }
+
+                update_post_meta($post_id, '_' . $field, $number);
+                continue;
+            }
+
             $value = sanitize_text_field($_POST[$field]);
 
             if ('popup_content_padding' === $field) {
@@ -725,6 +785,20 @@ class Clear_Pop_Metabox {
 
             if ('popup_border_radius_unit' === $field) {
                 $allowed_units = array('px', 'rem', 'em', 'vw', '%');
+                if (!in_array($value, $allowed_units, true)) {
+                    continue;
+                }
+            }
+
+            if ('popup_height_mode' === $field) {
+                $allowed_modes = array('auto', 'fixed');
+                if (!in_array($value, $allowed_modes, true)) {
+                    continue;
+                }
+            }
+
+            if ('popup_height_unit' === $field) {
+                $allowed_units = array('vh', 'px', '%');
                 if (!in_array($value, $allowed_units, true)) {
                     continue;
                 }

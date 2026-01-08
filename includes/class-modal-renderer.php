@@ -58,6 +58,13 @@ class Clear_Pop_Modal_Renderer {
     private function render_single_popup($popup) {
         // Get settings
         $size = get_post_meta($popup->ID, '_popup_size', true) ?: 'medium';
+        $height_mode = get_post_meta($popup->ID, '_popup_height_mode', true) ?: 'auto';
+        $height_value = get_post_meta($popup->ID, '_popup_height_value', true);
+        $height_unit = get_post_meta($popup->ID, '_popup_height_unit', true) ?: 'vh';
+        $allowed_height_units = array('vh', 'px', '%');
+        if (!in_array($height_unit, $allowed_height_units, true)) {
+            $height_unit = 'vh';
+        }
         $bg_color = get_post_meta($popup->ID, '_popup_bg_color', true) ?: '#000000';
         $bg_opacity = get_post_meta($popup->ID, '_popup_bg_opacity', true) ?: '0.8';
         $close_position = get_post_meta($popup->ID, '_popup_close_position', true) ?: 'top-right';
@@ -96,6 +103,12 @@ class Clear_Pop_Modal_Renderer {
             $radius = (float) $border_radius_value;
             $radius = rtrim(rtrim(sprintf('%.4f', $radius), '0'), '.');
             $inline_styles[] = 'border-radius:' . $radius . $border_radius_unit;
+        }
+        if ('fixed' === $height_mode && '' !== $height_value && is_numeric($height_value)) {
+            $height = (float) $height_value;
+            $height = rtrim(rtrim(sprintf('%.4f', $height), '0'), '.');
+            $inline_styles[] = 'height:' . $height . $height_unit;
+            $inline_styles[] = 'max-height:' . $height . $height_unit;
         }
         $style_attr = $inline_styles ? ' style="' . esc_attr(implode('; ', $inline_styles)) . '"' : '';
         
