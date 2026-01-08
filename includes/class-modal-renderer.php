@@ -131,7 +131,7 @@ class Clear_Pop_Modal_Renderer {
                     </svg>
                 </button>
                 <div class="hsp-popup-content nectar-global-section">
-                    <div class="hsp-popup-content-inner container-wrap">
+                    <div class="hsp-popup-content-inner">
                         <?php echo $content; ?>
                     </div>
                 </div>
