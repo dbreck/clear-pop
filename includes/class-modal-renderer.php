@@ -149,7 +149,7 @@ class Clear_Pop_Modal_Renderer {
         <div class="hsp-popup-overlay" id="hsp-popup-<?php echo esc_attr($popup->ID); ?>" style="background-color: <?php echo esc_attr($rgba); ?>;" data-popup-id="<?php echo esc_attr($popup->ID); ?>" data-popup-slug="<?php echo esc_attr($popup->post_name); ?>">
             <div class="<?php echo esc_attr(implode(' ', $container_classes)); ?>"<?php echo $style_attr; ?>>
                 <button class="<?php echo esc_attr(implode(' ', $close_classes)); ?>"<?php echo $close_style_attr; ?> aria-label="<?php esc_attr_e('Close', 'clear-pop'); ?>">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <svg width="60%" height="60%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                 </button>

@@ -3,7 +3,7 @@ Contributors: dbreck
 Tags: popup, modal, wpbakery, salient
 Requires at least: 5.0
 Tested up to: 6.4
-Stable tag: 1.4.0
+Stable tag: 1.4.1
 Requires PHP: 7.4
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -36,6 +36,9 @@ Clear Pop provides a clean, simple popup modal system designed for use with the 
 3. Go to Popups > Add New to create your first popup
 
 == Changelog ==
+
+= 1.4.1 =
+* Fixed close button X icon not scaling with custom button width
 
 = 1.4.0 =
 * Renamed "Modal Size" to "Modal Width"
