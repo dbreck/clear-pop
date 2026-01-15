@@ -64,7 +64,13 @@ class Clear_Pop_Metabox {
         
         // Get saved values
         $size = get_post_meta($post->ID, '_popup_size', true) ?: 'medium';
+        $width_value = get_post_meta($post->ID, '_popup_width_value', true);
+        $width_unit = get_post_meta($post->ID, '_popup_width_unit', true) ?: 'px';
         $height_mode = get_post_meta($post->ID, '_popup_height_mode', true) ?: 'auto';
+        // Convert legacy 'fixed' to 'custom' for UI display
+        if ('fixed' === $height_mode) {
+            $height_mode = 'custom';
+        }
         $height_value = get_post_meta($post->ID, '_popup_height_value', true);
         $height_unit = get_post_meta($post->ID, '_popup_height_unit', true) ?: 'vh';
         $bg_color = get_post_meta($post->ID, '_popup_bg_color', true) ?: '#000000';
@@ -72,6 +78,7 @@ class Clear_Pop_Metabox {
         $close_position = get_post_meta($post->ID, '_popup_close_position', true) ?: 'top-right';
         $close_style = get_post_meta($post->ID, '_popup_close_style', true) ?: 'light';
         $close_border = get_post_meta($post->ID, '_popup_close_border', true);
+        $close_button_width = get_post_meta($post->ID, '_popup_close_button_width', true);
         $content_padding = get_post_meta($post->ID, '_popup_content_padding', true) ?: 'default';
         $border_radius_value = get_post_meta($post->ID, '_popup_border_radius_value', true);
         $border_radius_unit = get_post_meta($post->ID, '_popup_border_radius_unit', true) ?: 'px';
@@ -113,7 +120,7 @@ class Clear_Pop_Metabox {
         
         <div class="popup-settings-grid">
             <div class="popup-setting-field">
-                <label for="popup_size"><?php _e('Modal Size', 'clear-pop'); ?></label>
+                <label for="popup_size"><?php _e('Modal Width', 'clear-pop'); ?></label>
                 <select name="popup_size" id="popup_size">
                     <option value="small" <?php selected($size, 'small'); ?>><?php _e('Small (400px)', 'clear-pop'); ?></option>
                     <option value="medium" <?php selected($size, 'medium'); ?>><?php _e('Medium (600px)', 'clear-pop'); ?></option>
@@ -121,7 +128,24 @@ class Clear_Pop_Metabox {
                     <option value="xlarge" <?php selected($size, 'xlarge'); ?>><?php _e('Extra Large (1000px)', 'clear-pop'); ?></option>
                     <option value="fullwidth" <?php selected($size, 'fullwidth'); ?>><?php _e('Full Width (90vw)', 'clear-pop'); ?></option>
                     <option value="fullscreen" <?php selected($size, 'fullscreen'); ?>><?php _e('Full Screen (96vw × 96vh)', 'clear-pop'); ?></option>
+                    <option value="custom" <?php selected($size, 'custom'); ?>><?php _e('Custom', 'clear-pop'); ?></option>
                 </select>
+                <div id="popup_width_custom_options" style="display: <?php echo 'custom' === $size ? 'grid' : 'none'; ?>; grid-template-columns: 1fr 80px; gap: 10px; margin-top: 8px;">
+                    <input
+                        type="number"
+                        name="popup_width_value"
+                        id="popup_width_value"
+                        min="1"
+                        step="1"
+                        placeholder="700"
+                        value="<?php echo esc_attr($width_value); ?>"
+                    />
+                    <select name="popup_width_unit" id="popup_width_unit">
+                        <option value="px" <?php selected($width_unit, 'px'); ?>>px</option>
+                        <option value="vw" <?php selected($width_unit, 'vw'); ?>>vw</option>
+                        <option value="%" <?php selected($width_unit, '%'); ?>>%</option>
+                    </select>
+                </div>
                 <small><?php _e('Width of the modal window', 'clear-pop'); ?></small>
             </div>
 
@@ -129,9 +153,9 @@ class Clear_Pop_Metabox {
                 <label for="popup_height_mode"><?php _e('Modal Height', 'clear-pop'); ?></label>
                 <select name="popup_height_mode" id="popup_height_mode">
                     <option value="auto" <?php selected($height_mode, 'auto'); ?>><?php _e('Auto (fit content)', 'clear-pop'); ?></option>
-                    <option value="fixed" <?php selected($height_mode, 'fixed'); ?>><?php _e('Fixed', 'clear-pop'); ?></option>
+                    <option value="custom" <?php selected($height_mode, 'custom'); ?>><?php _e('Custom', 'clear-pop'); ?></option>
                 </select>
-                <div id="popup_height_fixed_options" style="display: <?php echo $height_mode === 'fixed' ? 'grid' : 'none'; ?>; grid-template-columns: 1fr 80px; gap: 10px; margin-top: 8px;">
+                <div id="popup_height_custom_options" style="display: <?php echo 'custom' === $height_mode ? 'grid' : 'none'; ?>; grid-template-columns: 1fr 80px; gap: 10px; margin-top: 8px;">
                     <input
                         type="number"
                         name="popup_height_value"
@@ -148,7 +172,7 @@ class Clear_Pop_Metabox {
                         <option value="%" <?php selected($height_unit, '%'); ?>>%</option>
                     </select>
                 </div>
-                <small><?php _e('Auto scales to content (max 90vh). Fixed sets exact height.', 'clear-pop'); ?></small>
+                <small><?php _e('Auto scales to content (max 90vh). Custom sets exact height.', 'clear-pop'); ?></small>
             </div>
 
             <div class="popup-setting-field">
@@ -187,7 +211,23 @@ class Clear_Pop_Metabox {
                 </label>
                 <small><?php _e('Adds a 1px solid border around the close button', 'clear-pop'); ?></small>
             </div>
-            
+
+            <div class="popup-setting-field">
+                <label for="popup_close_button_width"><?php _e('Close Button Width', 'clear-pop'); ?></label>
+                <input
+                    type="number"
+                    name="popup_close_button_width"
+                    id="popup_close_button_width"
+                    min="20"
+                    max="100"
+                    step="1"
+                    placeholder="40"
+                    value="<?php echo esc_attr($close_button_width); ?>"
+                    style="max-width: 100px;"
+                />
+                <small><?php _e('Width in pixels (height is auto). Default: 40px', 'clear-pop'); ?></small>
+            </div>
+
             <div class="popup-setting-field">
                 <label for="popup_content_padding"><?php _e('Popup Padding', 'clear-pop'); ?></label>
                 <select name="popup_content_padding" id="popup_content_padding">
@@ -230,13 +270,23 @@ class Clear_Pop_Metabox {
             jQuery(document).ready(function($) {
                 $('.popup-color-picker').wpColorPicker();
 
+                // Width size toggle (show custom options when 'custom' selected)
+                var widthSize = document.getElementById('popup_size');
+                var widthOptions = document.getElementById('popup_width_custom_options');
+
+                if (widthSize && widthOptions) {
+                    widthSize.addEventListener('change', function() {
+                        widthOptions.style.display = this.value === 'custom' ? 'grid' : 'none';
+                    });
+                }
+
                 // Height mode toggle
                 var heightMode = document.getElementById('popup_height_mode');
-                var heightOptions = document.getElementById('popup_height_fixed_options');
+                var heightOptions = document.getElementById('popup_height_custom_options');
 
                 if (heightMode && heightOptions) {
                     heightMode.addEventListener('change', function() {
-                        heightOptions.style.display = this.value === 'fixed' ? 'grid' : 'none';
+                        heightOptions.style.display = this.value === 'custom' ? 'grid' : 'none';
                     });
                 }
             });
@@ -257,17 +307,30 @@ class Clear_Pop_Metabox {
             return;
         }
 
-        $trigger_class = 'hsp-popup-trigger-' . $post->ID;
+        $trigger_class_id = 'hsp-popup-trigger-' . $post->ID;
+        $trigger_class_slug = 'hsp-popup-trigger-' . $post->post_name;
         ?>
-        <p><?php esc_html_e('Add this CSS class to any button or link to trigger the popup:', 'clear-pop'); ?></p>
+        <p><?php esc_html_e('Add either CSS class to any button or link to trigger the popup:', 'clear-pop'); ?></p>
+
+        <label style="font-size: 11px; color: #666; display: block; margin-bottom: 4px;"><?php esc_html_e('By ID:', 'clear-pop'); ?></label>
         <input
             type="text"
             readonly
-            value="<?php echo esc_attr($trigger_class); ?>"
+            value="<?php echo esc_attr($trigger_class_id); ?>"
+            style="width: 100%; margin-bottom: 12px;"
+            onclick="this.select();"
+        />
+
+        <label style="font-size: 11px; color: #666; display: block; margin-bottom: 4px;"><?php esc_html_e('By Slug:', 'clear-pop'); ?></label>
+        <input
+            type="text"
+            readonly
+            value="<?php echo esc_attr($trigger_class_slug); ?>"
             style="width: 100%;"
             onclick="this.select();"
         />
-        <p style="margin-top: 8px;"><?php esc_html_e('Works everywhere you can set an extra class (WPBakery, menus, etc.).', 'clear-pop'); ?></p>
+
+        <p style="margin-top: 10px; font-size: 12px;"><?php esc_html_e('Works everywhere you can set an extra class (WPBakery, menus, etc.).', 'clear-pop'); ?></p>
         <?php
     }
 
@@ -713,6 +776,8 @@ class Clear_Pop_Metabox {
         // Save popup settings fields
         $fields = array(
             'popup_size',
+            'popup_width_value',
+            'popup_width_unit',
             'popup_height_mode',
             'popup_height_value',
             'popup_height_unit',
@@ -721,6 +786,7 @@ class Clear_Pop_Metabox {
             'popup_close_position',
             'popup_close_style',
             'popup_close_border',
+            'popup_close_button_width',
             'popup_content_padding',
             'popup_border_radius_value',
             'popup_border_radius_unit',
@@ -791,10 +857,63 @@ class Clear_Pop_Metabox {
             }
 
             if ('popup_height_mode' === $field) {
-                $allowed_modes = array('auto', 'fixed');
+                $allowed_modes = array('auto', 'custom');
                 if (!in_array($value, $allowed_modes, true)) {
                     continue;
                 }
+            }
+
+            if ('popup_size' === $field) {
+                $allowed_sizes = array('small', 'medium', 'large', 'xlarge', 'fullwidth', 'fullscreen', 'custom');
+                if (!in_array($value, $allowed_sizes, true)) {
+                    continue;
+                }
+            }
+
+            if ('popup_width_unit' === $field) {
+                $allowed_units = array('px', 'vw', '%');
+                if (!in_array($value, $allowed_units, true)) {
+                    continue;
+                }
+            }
+
+            if ('popup_width_value' === $field) {
+                $raw = trim(wp_unslash($_POST[$field]));
+
+                if ($raw === '') {
+                    delete_post_meta($post_id, '_' . $field);
+                    continue;
+                }
+
+                $number = floatval($raw);
+
+                if ($number < 1) {
+                    $number = 1;
+                }
+
+                update_post_meta($post_id, '_' . $field, $number);
+                continue;
+            }
+
+            if ('popup_close_button_width' === $field) {
+                $raw = trim(wp_unslash($_POST[$field]));
+
+                if ($raw === '') {
+                    delete_post_meta($post_id, '_' . $field);
+                    continue;
+                }
+
+                $number = absint($raw);
+
+                if ($number < 20) {
+                    $number = 20;
+                }
+                if ($number > 100) {
+                    $number = 100;
+                }
+
+                update_post_meta($post_id, '_' . $field, $number);
+                continue;
             }
 
             if ('popup_height_unit' === $field) {

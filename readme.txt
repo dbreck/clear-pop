@@ -3,7 +3,7 @@ Contributors: dbreck
 Tags: popup, modal, wpbakery, salient
 Requires at least: 5.0
 Tested up to: 6.4
-Stable tag: 1.3.1
+Stable tag: 1.4.0
 Requires PHP: 7.4
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -16,10 +16,10 @@ Clear Pop provides a clean, simple popup modal system designed for use with the 
 
 **Features:**
 
-* 6 size presets (Small to Full Screen)
-* Modal height control (Auto or Fixed)
+* 6 width presets (Small to Full Screen) plus Custom
+* Modal height control (Auto or Custom)
 * Custom background color and opacity
-* Close button positioning and styling
+* Close button positioning, styling, and width control
 * Border radius control
 * WPBakery Page Builder integration
 * Tab-specific popup opening
@@ -36,6 +36,13 @@ Clear Pop provides a clean, simple popup modal system designed for use with the 
 3. Go to Popups > Add New to create your first popup
 
 == Changelog ==
+
+= 1.4.0 =
+* Renamed "Modal Size" to "Modal Width"
+* Added Custom width option with value and unit (px, vw, %)
+* Changed height "Fixed" option to "Custom" for consistency
+* Added Close Button Width field (height auto with 1:1 aspect ratio)
+* Added slug-based trigger class option (e.g., hsp-popup-trigger-my-popup)
 
 = 1.3.1 =
 * Fixed Salient theme injecting min-height styles on popup content

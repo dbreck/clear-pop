@@ -49,35 +49,52 @@
 
         // First try data-popup-id (backward compatibility)
         let popupId = this.getAttribute('data-popup-id');
+        let popup = null;
 
-        // If not found, parse from class name (hsp-popup-trigger-123)
+        // If not found, parse from class name (hsp-popup-trigger-123 or hsp-popup-trigger-slug)
         if (!popupId) {
             const classes = this.className.split(' ');
             for (let i = 0; i < classes.length; i++) {
-                const match = classes[i].match(/^hsp-popup-trigger-(\d+)$/);
-                if (match) {
-                    popupId = match[1];
-                    break;
+                // Try numeric ID first (hsp-popup-trigger-123)
+                const numericMatch = classes[i].match(/^hsp-popup-trigger-(\d+)$/);
+                if (numericMatch) {
+                    popupId = numericMatch[1];
+                    popup = document.getElementById('hsp-popup-' + popupId);
+                    if (popup) {
+                        break;
+                    }
+                }
+
+                // Try slug-based (hsp-popup-trigger-my-popup-name)
+                const slugMatch = classes[i].match(/^hsp-popup-trigger-([a-z0-9-]+)$/i);
+                if (slugMatch && !popup) {
+                    const slug = slugMatch[1];
+                    // Skip if it's just a number (already handled above)
+                    if (!/^\d+$/.test(slug)) {
+                        // Find popup by data-popup-slug attribute
+                        popup = document.querySelector('.hsp-popup-overlay[data-popup-slug="' + slug + '"]');
+                        if (popup) {
+                            popupId = popup.getAttribute('data-popup-id');
+                            break;
+                        }
+                    }
                 }
             }
+        } else {
+            popup = document.getElementById('hsp-popup-' + popupId);
         }
 
-        if (!popupId) {
-            return;
-        }
-
-        const popup = document.getElementById('hsp-popup-' + popupId);
         if (!popup) {
             return;
         }
 
         // Check if a specific tab should be opened via class (e.g., hsp-tab-1, hsp-tab-2)
         let tabIndex = null;
-        const classes = this.className.split(' ');
-        for (let i = 0; i < classes.length; i++) {
-            const match = classes[i].match(/^hsp-tab-(\d+)$/);
-            if (match) {
-                tabIndex = parseInt(match[1], 10);
+        const tabClasses = this.className.split(' ');
+        for (let i = 0; i < tabClasses.length; i++) {
+            const tabMatch = tabClasses[i].match(/^hsp-tab-(\d+)$/);
+            if (tabMatch) {
+                tabIndex = parseInt(tabMatch[1], 10);
                 break;
             }
         }

@@ -58,6 +58,12 @@ class Clear_Pop_Modal_Renderer {
     private function render_single_popup($popup) {
         // Get settings
         $size = get_post_meta($popup->ID, '_popup_size', true) ?: 'medium';
+        $width_value = get_post_meta($popup->ID, '_popup_width_value', true);
+        $width_unit = get_post_meta($popup->ID, '_popup_width_unit', true) ?: 'px';
+        $allowed_width_units = array('px', 'vw', '%');
+        if (!in_array($width_unit, $allowed_width_units, true)) {
+            $width_unit = 'px';
+        }
         $height_mode = get_post_meta($popup->ID, '_popup_height_mode', true) ?: 'auto';
         $height_value = get_post_meta($popup->ID, '_popup_height_value', true);
         $height_unit = get_post_meta($popup->ID, '_popup_height_unit', true) ?: 'vh';
@@ -70,6 +76,7 @@ class Clear_Pop_Modal_Renderer {
         $close_position = get_post_meta($popup->ID, '_popup_close_position', true) ?: 'top-right';
         $close_style = get_post_meta($popup->ID, '_popup_close_style', true) ?: 'light';
         $close_border = get_post_meta($popup->ID, '_popup_close_border', true);
+        $close_button_width = get_post_meta($popup->ID, '_popup_close_button_width', true);
         $padding = get_post_meta($popup->ID, '_popup_content_padding', true) ?: 'default';
         $border_radius_value = get_post_meta($popup->ID, '_popup_border_radius_value', true);
         $border_radius_unit = get_post_meta($popup->ID, '_popup_border_radius_unit', true) ?: 'px';
@@ -104,13 +111,29 @@ class Clear_Pop_Modal_Renderer {
             $radius = rtrim(rtrim(sprintf('%.4f', $radius), '0'), '.');
             $inline_styles[] = 'border-radius:' . $radius . $border_radius_unit;
         }
-        if ('fixed' === $height_mode && '' !== $height_value && is_numeric($height_value)) {
+        if ('custom' === $size && '' !== $width_value && is_numeric($width_value)) {
+            $width = (float) $width_value;
+            $width = rtrim(rtrim(sprintf('%.4f', $width), '0'), '.');
+            $inline_styles[] = 'width:' . $width . $width_unit;
+        }
+        // Support both 'custom' (new) and 'fixed' (legacy) for backward compatibility
+        if (('custom' === $height_mode || 'fixed' === $height_mode) && '' !== $height_value && is_numeric($height_value)) {
             $height = (float) $height_value;
             $height = rtrim(rtrim(sprintf('%.4f', $height), '0'), '.');
             $inline_styles[] = 'height:' . $height . $height_unit;
             $inline_styles[] = 'max-height:' . $height . $height_unit;
         }
         $style_attr = $inline_styles ? ' style="' . esc_attr(implode('; ', $inline_styles)) . '"' : '';
+
+        // Close button inline styles
+        $close_inline_styles = array();
+        if ('' !== $close_button_width && is_numeric($close_button_width)) {
+            $btn_width = absint($close_button_width);
+            $close_inline_styles[] = 'width:' . $btn_width . 'px';
+            $close_inline_styles[] = 'height:auto';
+            $close_inline_styles[] = 'aspect-ratio:1';
+        }
+        $close_style_attr = $close_inline_styles ? ' style="' . esc_attr(implode('; ', $close_inline_styles)) . '"' : '';
         
         // Build close button classes
         $close_classes = array(
@@ -123,9 +146,9 @@ class Clear_Pop_Modal_Renderer {
         }
 
         ?>
-        <div class="hsp-popup-overlay" id="hsp-popup-<?php echo esc_attr($popup->ID); ?>" style="background-color: <?php echo esc_attr($rgba); ?>;" data-popup-id="<?php echo esc_attr($popup->ID); ?>">
+        <div class="hsp-popup-overlay" id="hsp-popup-<?php echo esc_attr($popup->ID); ?>" style="background-color: <?php echo esc_attr($rgba); ?>;" data-popup-id="<?php echo esc_attr($popup->ID); ?>" data-popup-slug="<?php echo esc_attr($popup->post_name); ?>">
             <div class="<?php echo esc_attr(implode(' ', $container_classes)); ?>"<?php echo $style_attr; ?>>
-                <button class="<?php echo esc_attr(implode(' ', $close_classes)); ?>" aria-label="<?php esc_attr_e('Close', 'clear-pop'); ?>">
+                <button class="<?php echo esc_attr(implode(' ', $close_classes)); ?>"<?php echo $close_style_attr; ?> aria-label="<?php esc_attr_e('Close', 'clear-pop'); ?>">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>

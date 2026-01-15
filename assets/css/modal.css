@@ -70,6 +70,10 @@
     max-height: 96vh;
 }
 
+.hsp-popup-size-custom {
+    /* Width set via inline style */
+}
+
 /* Content */
 .hsp-popup-content {
     width: 100%;
