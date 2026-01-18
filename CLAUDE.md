@@ -28,7 +28,11 @@ Clear Pop is a WordPress plugin providing a popup modal system with WPBakery Pag
 **Post Type**: `hsp_popup` with `public => true`, `publicly_queryable => false` (visible in WPBakery Role Manager but hidden from frontend queries)
 
 **Meta Keys** (all prefixed with `_`):
-- Modal: `_popup_size`, `_popup_height_mode` (auto/fixed), `_popup_height_value`, `_popup_height_unit` (vh/px/%), `_popup_bg_color`, `_popup_bg_opacity`, `_popup_close_position`, `_popup_close_style`, `_popup_close_border`, `_popup_content_padding`, `_popup_border_radius_value`, `_popup_border_radius_unit`
+- Modal Width: `_popup_size` (small/medium/large/xlarge/fullwidth/fullscreen/custom), `_popup_width_value`, `_popup_width_unit` (px/vw/%)
+- Modal Height: `_popup_height_mode` (auto/custom), `_popup_height_value`, `_popup_height_unit` (vh/px/%)
+- Background: `_popup_bg_color`, `_popup_bg_opacity`
+- Close Button: `_popup_close_position`, `_popup_close_style`, `_popup_close_border`, `_popup_close_button_width` (20-100px)
+- Content: `_popup_content_padding`, `_popup_border_radius_value`, `_popup_border_radius_unit`
 - Triggers: `_trigger_time_delay`, `_trigger_scroll_depth`, `_trigger_first_visit`, `_trigger_exit_intent`, `_trigger_logic`, `_cookie_duration`
 
 **Cookie System**: Cookie name pattern `clear_pop_{popup_id}`, stores JSON with `last_shown`, `shown_count`, `closed_method`, `last_closed`
@@ -46,8 +50,13 @@ window.hspPopup.closeAll();
 ```
 
 **Trigger Classes**:
-- `hsp-popup-trigger-{ID}` - Click trigger
+- `hsp-popup-trigger-{ID}` - Click trigger by post ID
+- `hsp-popup-trigger-{slug}` - Click trigger by post slug (e.g., `hsp-popup-trigger-contact-form`)
 - `hsp-tab-{N}` - Open with specific tab active (1-based)
+
+**Data Attributes** (on `.hsp-popup-overlay`):
+- `data-popup-id` - Post ID
+- `data-popup-slug` - Post slug (for slug-based triggers)
 
 ## WPBakery Integration
 
@@ -67,6 +76,7 @@ The `nectar-global-section` class on `.hsp-popup-content` is intentional and nee
 - No test framework configured
 - Checkbox meta fields require special save handling (explicit check for `isset($_POST[$field])`)
 - Assets only load when published `hsp_popup` posts exist
+- **Backward compatibility**: `_popup_height_mode` accepts both 'fixed' (legacy) and 'custom' (current) - renderer handles both, metabox displays 'fixed' as 'custom'
 
 ## Releases & Auto-Updates
 
