@@ -33,6 +33,7 @@ Clear Pop is a WordPress plugin providing a popup modal system with WPBakery Pag
 - Background: `_popup_bg_color`, `_popup_bg_opacity`
 - Close Button: `_popup_close_position`, `_popup_close_style`, `_popup_close_border`, `_popup_close_button_width` (20-100px)
 - Content: `_popup_content_padding`, `_popup_border_radius_value`, `_popup_border_radius_unit`
+- Page Targeting: `_display_pages` (all/specific), `_display_page_ids` (array of post IDs)
 - Triggers: `_trigger_time_delay`, `_trigger_scroll_depth`, `_trigger_first_visit`, `_trigger_exit_intent`, `_trigger_logic`, `_cookie_duration`
 
 **Cookie System**: Cookie name pattern `clear_pop_{popup_id}`, stores JSON with `last_shown`, `shown_count`, `closed_method`, `last_closed`

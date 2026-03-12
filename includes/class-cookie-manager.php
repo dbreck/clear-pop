@@ -130,7 +130,7 @@ class Clear_Pop_Cookie_Manager {
             COOKIEPATH,
             COOKIE_DOMAIN,
             is_ssl(),
-            true // HTTP only
+            false // Not HTTP-only so JavaScript can read it for trigger checks
         );
 
         // Update cookie superglobal for same-request access
@@ -174,7 +174,7 @@ class Clear_Pop_Cookie_Manager {
             COOKIEPATH,
             COOKIE_DOMAIN,
             is_ssl(),
-            true // HTTP only
+            false // Not HTTP-only so JavaScript can read it for trigger checks
         );
 
         // Update cookie superglobal for same-request access

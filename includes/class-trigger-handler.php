@@ -47,7 +47,18 @@ class Clear_Pop_Trigger_Handler {
             return $trigger_data;
         }
 
+        $current_page_id = get_queried_object_id();
+
         foreach ($popups as $popup_id) {
+            // Check page targeting before including trigger data
+            $display_pages = get_post_meta($popup_id, '_display_pages', true) ?: 'all';
+            if ('specific' === $display_pages) {
+                $display_page_ids = get_post_meta($popup_id, '_display_page_ids', true);
+                if (is_array($display_page_ids) && !empty($display_page_ids) && !in_array($current_page_id, $display_page_ids, false)) {
+                    continue; // Not targeted for this page
+                }
+            }
+
             $time_delay = absint(get_post_meta($popup_id, '_trigger_time_delay', true));
             $scroll_depth = absint(get_post_meta($popup_id, '_trigger_scroll_depth', true));
             $first_visit = get_post_meta($popup_id, '_trigger_first_visit', true);

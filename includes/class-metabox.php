@@ -345,6 +345,8 @@ class Clear_Pop_Metabox {
         $exit_intent = get_post_meta($post->ID, '_trigger_exit_intent', true);
         $trigger_logic = get_post_meta($post->ID, '_trigger_logic', true) ?: 'any';
         $cookie_duration = get_post_meta($post->ID, '_cookie_duration', true) ?: 'never';
+        $display_pages = get_post_meta($post->ID, '_display_pages', true) ?: 'all';
+        $display_page_ids = get_post_meta($post->ID, '_display_page_ids', true) ?: array();
 
         // Check if multiple triggers enabled (for showing logic selector)
         $enabled_count = 0;
@@ -406,6 +408,53 @@ class Clear_Pop_Metabox {
                 margin: 20px 0;
             }
         </style>
+
+        <!-- Display Pages -->
+        <div class="trigger-setting-field" style="margin-bottom: 20px;">
+            <label><?php _e('Display On', 'clear-pop'); ?></label>
+            <div class="trigger-radio-group">
+                <div class="trigger-radio-option">
+                    <input type="radio" name="display_pages" id="display_pages_all" value="all" <?php checked($display_pages, 'all'); ?>>
+                    <label for="display_pages_all" style="font-weight: normal; margin: 0;">
+                        <?php _e('All pages', 'clear-pop'); ?>
+                    </label>
+                </div>
+                <div class="trigger-radio-option">
+                    <input type="radio" name="display_pages" id="display_pages_specific" value="specific" <?php checked($display_pages, 'specific'); ?>>
+                    <label for="display_pages_specific" style="font-weight: normal; margin: 0;">
+                        <?php _e('Specific pages only', 'clear-pop'); ?>
+                    </label>
+                </div>
+            </div>
+            <div id="display_page_selector" style="margin-top: 10px; margin-left: 20px; <?php echo 'specific' !== $display_pages ? 'display:none;' : ''; ?>">
+                <select name="display_page_ids[]" id="display_page_ids" multiple="multiple" style="width: 100%; min-height: 150px;">
+                    <?php
+                    // Get all public pages and posts
+                    $all_pages = get_posts(array(
+                        'post_type'      => array('page', 'post'),
+                        'post_status'    => 'publish',
+                        'posts_per_page' => -1,
+                        'orderby'        => 'title',
+                        'order'          => 'ASC',
+                    ));
+                    foreach ($all_pages as $page_item) {
+                        $post_type_label = get_post_type_object($page_item->post_type)->labels->singular_name;
+                        $selected = is_array($display_page_ids) && in_array($page_item->ID, $display_page_ids) ? ' selected' : '';
+                        printf(
+                            '<option value="%d"%s>%s (%s)</option>',
+                            $page_item->ID,
+                            $selected,
+                            esc_html($page_item->post_title),
+                            esc_html($post_type_label)
+                        );
+                    }
+                    ?>
+                </select>
+                <small><?php _e('Hold Ctrl/Cmd to select multiple pages. Manual click triggers work everywhere regardless of this setting.', 'clear-pop'); ?></small>
+            </div>
+        </div>
+
+        <div class="trigger-section-divider"></div>
 
         <div class="trigger-info-box">
             <strong><?php _e('Click to Open (Manual Trigger)', 'clear-pop'); ?></strong><br>
@@ -693,6 +742,20 @@ class Clear_Pop_Metabox {
                 // Initialize preview
                 updateTriggerPreview();
 
+                // Display pages toggle
+                var displayPagesAll = document.getElementById('display_pages_all');
+                var displayPagesSpecific = document.getElementById('display_pages_specific');
+                var pageSelector = document.getElementById('display_page_selector');
+
+                function updatePageSelector() {
+                    if (pageSelector) {
+                        pageSelector.style.display = displayPagesSpecific && displayPagesSpecific.checked ? 'block' : 'none';
+                    }
+                }
+
+                if (displayPagesAll) displayPagesAll.addEventListener('change', updatePageSelector);
+                if (displayPagesSpecific) displayPagesSpecific.addEventListener('change', updatePageSelector);
+
                 // Clear cookie button handler
                 const clearCookieBtn = document.getElementById('clear_popup_cookie');
                 if (clearCookieBtn) {
@@ -924,6 +987,24 @@ class Clear_Pop_Metabox {
             }
 
             update_post_meta($post_id, '_' . $field, $value);
+        }
+
+        // Save display pages setting
+        if (isset($_POST['display_pages'])) {
+            $display_pages = sanitize_text_field($_POST['display_pages']);
+            $allowed_display = array('all', 'specific');
+            if (in_array($display_pages, $allowed_display, true)) {
+                update_post_meta($post_id, '_display_pages', $display_pages);
+            }
+        }
+
+        // Save specific page IDs
+        if (isset($_POST['display_page_ids']) && is_array($_POST['display_page_ids'])) {
+            $page_ids = array_map('absint', $_POST['display_page_ids']);
+            $page_ids = array_filter($page_ids);
+            update_post_meta($post_id, '_display_page_ids', $page_ids);
+        } else {
+            update_post_meta($post_id, '_display_page_ids', array());
         }
 
         // Save trigger settings

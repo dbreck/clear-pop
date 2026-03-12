@@ -361,36 +361,66 @@
     }
 
     /**
-     * Send AJAX request to record popup close
+     * Record popup close - set cookie immediately client-side, then notify server
      */
     function sendCloseTracking(popupId, closeMethod) {
         // Get trigger config for this popup
         const config = window.clearPopTriggers && window.clearPopTriggers[popupId];
-        if (!config) {
-            return;
+        const cookieDuration = (config && config.cookie_duration) ? config.cookie_duration : 'never';
+
+        // Set cookie immediately client-side (don't rely on AJAX completing)
+        setPopupCloseCookie(popupId, closeMethod, cookieDuration);
+
+        // Also send AJAX for server-side tracking (fire-and-forget)
+        var ajaxUrl = window.clearPopAjax && window.clearPopAjax.ajax_url;
+        if (ajaxUrl) {
+            var formData = new FormData();
+            formData.append('action', 'clear_pop_close');
+            formData.append('popup_id', popupId);
+            formData.append('close_method', closeMethod);
+            formData.append('cookie_duration', cookieDuration);
+
+            fetch(ajaxUrl, {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin'
+            }).catch(function() {});
+        }
+    }
+
+    /**
+     * Set popup cookie client-side on close
+     */
+    function setPopupCloseCookie(popupId, closeMethod, duration) {
+        var cookieName = 'clear_pop_' + popupId;
+        var data = {
+            popup_id: popupId,
+            last_shown: Date.now(),
+            shown_count: 1,
+            closed_method: closeMethod,
+            last_closed: Date.now()
+        };
+
+        // Try to preserve shown_count from existing cookie
+        var existing = getCookie(cookieName);
+        if (existing) {
+            try {
+                var existingData = JSON.parse(existing);
+                data.shown_count = (existingData.shown_count || 0) + 1;
+            } catch (e) {}
         }
 
-        // Get AJAX URL
-        const ajaxUrl = window.clearPopAjax && window.clearPopAjax.ajax_url;
-        if (!ajaxUrl) {
-            return;
+        // Calculate expiry days based on duration
+        var days = 3650; // default: ~10 years for 'never'
+        switch (duration) {
+            case 'session':  days = 0; break;
+            case '1hour':    days = 1 / 24; break;
+            case '24hours':  days = 1; break;
+            case '7days':    days = 7; break;
+            case '30days':   days = 30; break;
         }
 
-        // Prepare form data
-        const formData = new FormData();
-        formData.append('action', 'clear_pop_close');
-        formData.append('popup_id', popupId);
-        formData.append('close_method', closeMethod);
-        formData.append('cookie_duration', config.cookie_duration || 'never');
-
-        // Send AJAX request
-        fetch(ajaxUrl, {
-            method: 'POST',
-            body: formData,
-            credentials: 'same-origin'
-        }).catch(function(error) {
-            console.error('Clear Pop: Failed to record close event', error);
-        });
+        setCookie(cookieName, JSON.stringify(data), days);
     }
 
     /**

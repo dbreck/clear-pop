@@ -42,7 +42,15 @@ class Clear_Pop_Modal_Renderer {
         // Get trigger handler for cookie checking
         $trigger_handler = Clear_Pop_Trigger_Handler::get_instance();
 
+        // Get current page/post ID
+        $current_page_id = get_queried_object_id();
+
         foreach ($popups as $popup) {
+            // Check page targeting
+            if (!$this->should_display_on_page($popup->ID, $current_page_id)) {
+                continue; // Not targeted for this page
+            }
+
             // Check if popup should be shown based on cookies
             if (!$trigger_handler->should_render_popup($popup->ID)) {
                 continue; // Skip rendering this popup
@@ -52,6 +60,29 @@ class Clear_Pop_Modal_Renderer {
         }
     }
     
+    /**
+     * Check if popup should display on current page
+     *
+     * @param int $popup_id      Popup post ID
+     * @param int $current_page  Current page/post ID
+     * @return bool
+     */
+    private function should_display_on_page($popup_id, $current_page) {
+        $display_pages = get_post_meta($popup_id, '_display_pages', true) ?: 'all';
+
+        if ('all' === $display_pages) {
+            return true;
+        }
+
+        $display_page_ids = get_post_meta($popup_id, '_display_page_ids', true);
+
+        if (!is_array($display_page_ids) || empty($display_page_ids)) {
+            return true; // No specific pages configured = show everywhere (fail safe)
+        }
+
+        return in_array($current_page, $display_page_ids, false);
+    }
+
     /**
      * Render single popup
      */
