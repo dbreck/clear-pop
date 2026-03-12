@@ -36,7 +36,9 @@ Clear Pop is a WordPress plugin providing a popup modal system with WPBakery Pag
 - Page Targeting: `_display_pages` (all/specific), `_display_page_ids` (array of post IDs)
 - Triggers: `_trigger_time_delay`, `_trigger_scroll_depth`, `_trigger_first_visit`, `_trigger_exit_intent`, `_trigger_logic`, `_cookie_duration`
 
-**Cookie System**: Cookie name pattern `clear_pop_{popup_id}`, stores JSON with `last_shown`, `shown_count`, `closed_method`, `last_closed`
+**Cookie System**: Cookie name pattern `clear_pop_{popup_id}`, stores JSON with `last_shown`, `shown_count`, `closed_method`, `last_closed`. Cookies are **non-httpOnly** (readable by both JS and PHP). Primary cookie is set **client-side in triggers.js** on popup close for reliability; AJAX call to `clear_pop_close` is secondary/fire-and-forget. First visit uses a separate `clear_pop_first_visit` JS cookie.
+
+**Page Targeting**: Checked in both `Clear_Pop_Modal_Renderer::should_display_on_page()` (prevents HTML rendering) and `Clear_Pop_Trigger_Handler::get_localized_data()` (prevents JS trigger data). Manual click triggers still work on any page where the popup is rendered.
 
 **AJAX Endpoints**:
 - `clear_pop_close` - Records popup close (no nonce, fire-and-forget)
