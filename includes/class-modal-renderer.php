@@ -39,9 +39,6 @@ class Clear_Pop_Modal_Renderer {
             return;
         }
 
-        // Get trigger handler for cookie checking
-        $trigger_handler = Clear_Pop_Trigger_Handler::get_instance();
-
         // Get current page/post ID
         $current_page_id = get_queried_object_id();
 
@@ -51,11 +48,9 @@ class Clear_Pop_Modal_Renderer {
                 continue; // Not targeted for this page
             }
 
-            // Check if popup should be shown based on cookies
-            if (!$trigger_handler->should_render_popup($popup->ID)) {
-                continue; // Skip rendering this popup
-            }
-
+            // Always render popup HTML — click-triggered popups need the DOM element
+            // present regardless of cookie state. Cookie checks for auto-triggered
+            // popups are handled client-side by triggers.js.
             $this->render_single_popup($popup);
         }
     }
