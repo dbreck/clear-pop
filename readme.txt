@@ -3,7 +3,7 @@ Contributors: dbreck
 Tags: popup, modal, wpbakery, salient
 Requires at least: 5.0
 Tested up to: 6.4
-Stable tag: 1.5.0
+Stable tag: 1.6.0
 Requires PHP: 7.4
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -36,6 +36,14 @@ Clear Pop provides a clean, simple popup modal system designed for use with the 
 3. Go to Popups > Add New to create your first popup
 
 == Changelog ==
+
+= 1.6.0 =
+* Added Popup Background Color setting (inherits the Salient theme background when left blank)
+* Added Close Button per-edge Offset (top/right/bottom/left) for nudging the button off the edges
+* Added Close Button Color picker (overrides the Light/Dark style)
+* Color pickers now show the Salient theme palette as swatches
+* Fixed images inside popups ignoring the Salient element's Custom Max Width (popups render outside #ajax-content-wrap, so base image sizing is now re-established inside the popup)
+* Fixed Close Button Offset inputs overflowing the settings metabox
 
 = 1.5.0 =
 * Added page targeting - display popup on all pages or specific pages only

@@ -82,7 +82,28 @@ class Clear_Pop_Metabox {
         $content_padding = get_post_meta($post->ID, '_popup_content_padding', true) ?: 'default';
         $border_radius_value = get_post_meta($post->ID, '_popup_border_radius_value', true);
         $border_radius_unit = get_post_meta($post->ID, '_popup_border_radius_unit', true) ?: 'px';
-        
+        $content_bg_color = get_post_meta($post->ID, '_popup_content_bg_color', true);
+        $close_color = get_post_meta($post->ID, '_popup_close_color', true);
+        $close_offset_top = get_post_meta($post->ID, '_popup_close_offset_top', true);
+        $close_offset_right = get_post_meta($post->ID, '_popup_close_offset_right', true);
+        $close_offset_bottom = get_post_meta($post->ID, '_popup_close_offset_bottom', true);
+        $close_offset_left = get_post_meta($post->ID, '_popup_close_offset_left', true);
+        $nectar_options = function_exists('get_nectar_theme_options') ? get_nectar_theme_options() : array();
+        $theme_bg_color = (is_array($nectar_options) && !empty($nectar_options['background-color'])) ? $nectar_options['background-color'] : '#ffffff';
+
+        // Build a swatch palette from the Salient theme colors so the pickers
+        // mirror the native (Nectar) color picker.
+        $color_palette = array();
+        foreach (array('accent-color', 'extra-color-1', 'extra-color-2', 'extra-color-3') as $color_key) {
+            if (!empty($nectar_options[$color_key]) && is_string($nectar_options[$color_key])) {
+                $hex = sanitize_hex_color($nectar_options[$color_key]);
+                if ($hex) {
+                    $color_palette[] = $hex;
+                }
+            }
+        }
+        $color_palette = array_values(array_unique(array_merge($color_palette, array('#000000', '#ffffff'))));
+
         ?>
         <style>
             .popup-settings-grid {
@@ -106,6 +127,8 @@ class Clear_Pop_Metabox {
                 padding: 8px;
                 border: 1px solid #ddd;
                 border-radius: 4px;
+                min-width: 0;
+                box-sizing: border-box;
             }
             .popup-setting-field small {
                 color: #666;
@@ -185,7 +208,18 @@ class Clear_Pop_Metabox {
                 </select>
                 <small><?php _e('Position of the close button', 'clear-pop'); ?></small>
             </div>
-            
+
+            <div class="popup-setting-field">
+                <label><?php _e('Close Button Offset', 'clear-pop'); ?></label>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                    <input type="number" name="popup_close_offset_top" min="0" step="1" placeholder="<?php esc_attr_e('Top', 'clear-pop'); ?>" value="<?php echo esc_attr($close_offset_top); ?>" />
+                    <input type="number" name="popup_close_offset_right" min="0" step="1" placeholder="<?php esc_attr_e('Right', 'clear-pop'); ?>" value="<?php echo esc_attr($close_offset_right); ?>" />
+                    <input type="number" name="popup_close_offset_bottom" min="0" step="1" placeholder="<?php esc_attr_e('Bottom', 'clear-pop'); ?>" value="<?php echo esc_attr($close_offset_bottom); ?>" />
+                    <input type="number" name="popup_close_offset_left" min="0" step="1" placeholder="<?php esc_attr_e('Left', 'clear-pop'); ?>" value="<?php echo esc_attr($close_offset_left); ?>" />
+                </div>
+                <small><?php _e('Distance (px) from each edge. Fill the two that match the chosen corner. Blank = default (15px).', 'clear-pop'); ?></small>
+            </div>
+
             <div class="popup-setting-field">
                 <label><?php _e('Background Color & Opacity', 'clear-pop'); ?></label>
                 <div class="color-opacity-group">
@@ -194,7 +228,13 @@ class Clear_Pop_Metabox {
                 </div>
                 <small><?php _e('Overlay background color and opacity (0-1)', 'clear-pop'); ?></small>
             </div>
-            
+
+            <div class="popup-setting-field">
+                <label for="popup_content_bg_color"><?php _e('Popup Background Color', 'clear-pop'); ?></label>
+                <input type="text" name="popup_content_bg_color" id="popup_content_bg_color" value="<?php echo esc_attr($content_bg_color); ?>" class="popup-color-picker" />
+                <small><?php printf(esc_html__('Background of the popup box. Leave blank to inherit the Salient theme background (%s).', 'clear-pop'), esc_html($theme_bg_color)); ?></small>
+            </div>
+
             <div class="popup-setting-field">
                 <label for="popup_close_style"><?php _e('Close Button Style', 'clear-pop'); ?></label>
                 <select name="popup_close_style" id="popup_close_style">
@@ -202,6 +242,12 @@ class Clear_Pop_Metabox {
                     <option value="dark" <?php selected($close_style, 'dark'); ?>><?php _e('Dark (Black)', 'clear-pop'); ?></option>
                 </select>
                 <small><?php _e('Color theme for close button', 'clear-pop'); ?></small>
+            </div>
+
+            <div class="popup-setting-field">
+                <label for="popup_close_color"><?php _e('Close Button Color', 'clear-pop'); ?></label>
+                <input type="text" name="popup_close_color" id="popup_close_color" value="<?php echo esc_attr($close_color); ?>" class="popup-color-picker" />
+                <small><?php _e('Overrides the Light/Dark style above. Leave blank to use the style.', 'clear-pop'); ?></small>
             </div>
 
             <div class="popup-setting-field">
@@ -268,7 +314,9 @@ class Clear_Pop_Metabox {
         
         <script>
             jQuery(document).ready(function($) {
-                $('.popup-color-picker').wpColorPicker();
+                $('.popup-color-picker').wpColorPicker({
+                    palettes: <?php echo wp_json_encode($color_palette); ?>
+                });
 
                 // Width size toggle (show custom options when 'custom' selected)
                 var widthSize = document.getElementById('popup_size');
@@ -987,6 +1035,40 @@ class Clear_Pop_Metabox {
             }
 
             update_post_meta($post_id, '_' . $field, $value);
+        }
+
+        // Popup background colour (hex; blank = inherit theme background).
+        if (isset($_POST['popup_content_bg_color'])) {
+            $hex = sanitize_hex_color(trim(wp_unslash($_POST['popup_content_bg_color'])));
+            if (empty($hex)) {
+                delete_post_meta($post_id, '_popup_content_bg_color');
+            } else {
+                update_post_meta($post_id, '_popup_content_bg_color', $hex);
+            }
+        }
+
+        // Close button colour (hex; blank = use Light/Dark style).
+        if (isset($_POST['popup_close_color'])) {
+            $hex = sanitize_hex_color(trim(wp_unslash($_POST['popup_close_color'])));
+            if (empty($hex)) {
+                delete_post_meta($post_id, '_popup_close_color');
+            } else {
+                update_post_meta($post_id, '_popup_close_color', $hex);
+            }
+        }
+
+        // Close button per-edge offsets (px; blank = default).
+        foreach (array('top', 'right', 'bottom', 'left') as $side) {
+            $key = 'popup_close_offset_' . $side;
+            if (!isset($_POST[$key])) {
+                continue;
+            }
+            $raw = trim(wp_unslash($_POST[$key]));
+            if ('' === $raw) {
+                delete_post_meta($post_id, '_' . $key);
+                continue;
+            }
+            update_post_meta($post_id, '_' . $key, absint($raw));
         }
 
         // Save display pages setting

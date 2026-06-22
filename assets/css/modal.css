@@ -91,6 +91,27 @@
     padding: 0 !important;
 }
 
+/* ==========================================================================
+   Salient content compatibility
+   --------------------------------------------------------------------------
+   Popup content is rendered via the_content() straight into <body> in
+   wp_footer, OUTSIDE #ajax-content-wrap and WITHOUT Salient's .row/.col
+   wrappers. Several Salient base styles are scoped to `.row .col` /
+   `#ajax-content-wrap`, so they never reach popup content. Re-establish the
+   essentials here, scoped to `.hsp-popup-content` (our stand-in for the
+   content context).
+
+   Image sizing: Salient sizes images with `.row .col img { max-width:100% }`.
+   Without it the <img> ignores its container and overflows the element's
+   Custom Max Width (the .inner is capped correctly; the image was not).
+   ========================================================================== */
+.hsp-popup-content .img-with-aniamtion-wrap img,
+.hsp-popup-content img.img-with-animation,
+.hsp-popup-content .wpb_wrapper img {
+    max-width: 100%;
+    height: auto;
+}
+
 .hsp-popup-container.hsp-popup-padding-none .hsp-popup-close-top-right {
     top: 12px;
     right: 12px;

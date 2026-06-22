@@ -110,7 +110,22 @@ class Clear_Pop_Modal_Renderer {
         if (!in_array($border_radius_unit, $allowed_radius_units, true)) {
             $border_radius_unit = 'px';
         }
-        
+
+        // Popup box background: custom value, else inherit Salient theme background.
+        $content_bg_color = get_post_meta($popup->ID, '_popup_content_bg_color', true);
+        $nectar_options   = function_exists('get_nectar_theme_options') ? get_nectar_theme_options() : array();
+        $theme_bg_color   = (is_array($nectar_options) && !empty($nectar_options['background-color'])) ? $nectar_options['background-color'] : '';
+        $popup_bg         = ('' !== $content_bg_color) ? $content_bg_color : $theme_bg_color;
+
+        // Close button colour + per-edge offsets.
+        $close_color   = get_post_meta($popup->ID, '_popup_close_color', true);
+        $close_offsets = array(
+            'top'    => get_post_meta($popup->ID, '_popup_close_offset_top', true),
+            'right'  => get_post_meta($popup->ID, '_popup_close_offset_right', true),
+            'bottom' => get_post_meta($popup->ID, '_popup_close_offset_bottom', true),
+            'left'   => get_post_meta($popup->ID, '_popup_close_offset_left', true),
+        );
+
         // Convert hex to rgba
         $rgba = $this->hex_to_rgba($bg_color, $bg_opacity);
         
@@ -132,6 +147,9 @@ class Clear_Pop_Modal_Renderer {
         );
         
         $inline_styles = array();
+        if ('' !== $popup_bg) {
+            $inline_styles[] = 'background-color:' . $popup_bg;
+        }
         if ('' !== $border_radius_value && is_numeric($border_radius_value)) {
             $radius = (float) $border_radius_value;
             $radius = rtrim(rtrim(sprintf('%.4f', $radius), '0'), '.');
@@ -158,6 +176,16 @@ class Clear_Pop_Modal_Renderer {
             $close_inline_styles[] = 'width:' . $btn_width . 'px';
             $close_inline_styles[] = 'height:auto';
             $close_inline_styles[] = 'aspect-ratio:1';
+        }
+        // Per-edge offsets override the position-class defaults.
+        foreach ($close_offsets as $side => $offset_val) {
+            if ('' !== $offset_val && is_numeric($offset_val)) {
+                $close_inline_styles[] = $side . ':' . (float) $offset_val . 'px';
+            }
+        }
+        // Custom colour overrides the Light/Dark style class (SVG + border use currentColor).
+        if ('' !== $close_color) {
+            $close_inline_styles[] = 'color:' . $close_color;
         }
         $close_style_attr = $close_inline_styles ? ' style="' . esc_attr(implode('; ', $close_inline_styles)) . '"' : '';
         
