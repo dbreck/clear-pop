@@ -99,7 +99,7 @@ class Clear_Pop_Trigger_Handler {
         }
 
         // Validate cookie duration
-        $allowed_durations = array('never', 'session', '1hour', '24hours', '7days', '30days');
+        $allowed_durations = array('never', 'session', '1hour', '24hours', '7days', '30days', 'always');
         if (!in_array($cookie_duration, $allowed_durations, true)) {
             $cookie_duration = 'never';
         }

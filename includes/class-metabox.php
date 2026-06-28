@@ -79,7 +79,12 @@ class Clear_Pop_Metabox {
         $close_style = get_post_meta($post->ID, '_popup_close_style', true) ?: 'light';
         $close_border = get_post_meta($post->ID, '_popup_close_border', true);
         $close_button_width = get_post_meta($post->ID, '_popup_close_button_width', true);
+        $close_button_width_tablet = get_post_meta($post->ID, '_popup_close_button_width_tablet', true);
+        $close_button_width_mobile = get_post_meta($post->ID, '_popup_close_button_width_mobile', true);
         $content_padding = get_post_meta($post->ID, '_popup_content_padding', true) ?: 'default';
+        $content_padding_value = get_post_meta($post->ID, '_popup_content_padding_value', true);
+        $content_padding_value_tablet = get_post_meta($post->ID, '_popup_content_padding_value_tablet', true);
+        $content_padding_value_mobile = get_post_meta($post->ID, '_popup_content_padding_value_mobile', true);
         $border_radius_value = get_post_meta($post->ID, '_popup_border_radius_value', true);
         $border_radius_unit = get_post_meta($post->ID, '_popup_border_radius_unit', true) ?: 'px';
         $content_bg_color = get_post_meta($post->ID, '_popup_content_bg_color', true);
@@ -260,27 +265,102 @@ class Clear_Pop_Metabox {
 
             <div class="popup-setting-field">
                 <label for="popup_close_button_width"><?php _e('Close Button Width', 'clear-pop'); ?></label>
-                <input
-                    type="number"
-                    name="popup_close_button_width"
-                    id="popup_close_button_width"
-                    min="20"
-                    max="100"
-                    step="1"
-                    placeholder="40"
-                    value="<?php echo esc_attr($close_button_width); ?>"
-                    style="max-width: 100px;"
-                />
-                <small><?php _e('Width in pixels (height is auto). Default: 40px', 'clear-pop'); ?></small>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                    <div>
+                        <input
+                            type="number"
+                            name="popup_close_button_width"
+                            id="popup_close_button_width"
+                            min="20"
+                            max="100"
+                            step="1"
+                            placeholder="40"
+                            value="<?php echo esc_attr($close_button_width); ?>"
+                            style="width: 100%;"
+                        />
+                        <small><?php _e('Desktop', 'clear-pop'); ?></small>
+                    </div>
+                    <div>
+                        <input
+                            type="number"
+                            name="popup_close_button_width_tablet"
+                            id="popup_close_button_width_tablet"
+                            min="20"
+                            max="100"
+                            step="1"
+                            placeholder="<?php echo esc_attr($close_button_width ?: '40'); ?>"
+                            value="<?php echo esc_attr($close_button_width_tablet); ?>"
+                            style="width: 100%;"
+                        />
+                        <small><?php _e('Tablet', 'clear-pop'); ?></small>
+                    </div>
+                    <div>
+                        <input
+                            type="number"
+                            name="popup_close_button_width_mobile"
+                            id="popup_close_button_width_mobile"
+                            min="20"
+                            max="100"
+                            step="1"
+                            placeholder="<?php echo esc_attr($close_button_width ?: '40'); ?>"
+                            value="<?php echo esc_attr($close_button_width_mobile); ?>"
+                            style="width: 100%;"
+                        />
+                        <small><?php _e('Mobile', 'clear-pop'); ?></small>
+                    </div>
+                </div>
+                <small><?php _e('Width in pixels (height is auto). Default: 40px. Tablet &le;1024px, Mobile &le;767px &mdash; leave blank to inherit the desktop value.', 'clear-pop'); ?></small>
             </div>
 
             <div class="popup-setting-field">
                 <label for="popup_content_padding"><?php _e('Popup Padding', 'clear-pop'); ?></label>
                 <select name="popup_content_padding" id="popup_content_padding">
-                    <option value="default" <?php selected($content_padding, 'default'); ?>><?php _e('Default Padding', 'clear-pop'); ?></option>
+                    <option value="default" <?php selected($content_padding, 'default'); ?>><?php _e('Default Padding (40px)', 'clear-pop'); ?></option>
                     <option value="none" <?php selected($content_padding, 'none'); ?>><?php _e('Edge to Edge (No Padding)', 'clear-pop'); ?></option>
+                    <option value="custom" <?php selected($content_padding, 'custom'); ?>><?php _e('Custom (set amount)', 'clear-pop'); ?></option>
                 </select>
-                <small><?php _e('Control white space around popup content.', 'clear-pop'); ?></small>
+                <div id="popup_content_padding_custom_options" style="display: <?php echo 'custom' === $content_padding ? 'block' : 'none'; ?>; margin-top: 8px;">
+                    <input
+                        type="number"
+                        name="popup_content_padding_value"
+                        id="popup_content_padding_value"
+                        min="0"
+                        step="1"
+                        placeholder="40"
+                        value="<?php echo esc_attr($content_padding_value); ?>"
+                        style="max-width: 100px;"
+                    />
+                    <small><?php _e('Padding in pixels on all sides. Increase this to move the close button away from the content background.', 'clear-pop'); ?></small>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px;">
+                    <div>
+                        <input
+                            type="number"
+                            name="popup_content_padding_value_tablet"
+                            id="popup_content_padding_value_tablet"
+                            min="0"
+                            step="1"
+                            placeholder="<?php esc_attr_e('Tablet px', 'clear-pop'); ?>"
+                            value="<?php echo esc_attr($content_padding_value_tablet); ?>"
+                            style="width: 100%;"
+                        />
+                        <small><?php _e('Tablet &le;1024px', 'clear-pop'); ?></small>
+                    </div>
+                    <div>
+                        <input
+                            type="number"
+                            name="popup_content_padding_value_mobile"
+                            id="popup_content_padding_value_mobile"
+                            min="0"
+                            step="1"
+                            placeholder="<?php esc_attr_e('Mobile px', 'clear-pop'); ?>"
+                            value="<?php echo esc_attr($content_padding_value_mobile); ?>"
+                            style="width: 100%;"
+                        />
+                        <small><?php _e('Mobile &le;767px', 'clear-pop'); ?></small>
+                    </div>
+                </div>
+                <small><?php _e('Control white space around popup content. Tablet/Mobile values (px) override the padding above at those breakpoints &mdash; leave blank to inherit.', 'clear-pop'); ?></small>
             </div>
             
             <div class="popup-setting-field">
@@ -335,6 +415,16 @@ class Clear_Pop_Metabox {
                 if (heightMode && heightOptions) {
                     heightMode.addEventListener('change', function() {
                         heightOptions.style.display = this.value === 'custom' ? 'grid' : 'none';
+                    });
+                }
+
+                // Padding mode toggle
+                var paddingMode = document.getElementById('popup_content_padding');
+                var paddingOptions = document.getElementById('popup_content_padding_custom_options');
+
+                if (paddingMode && paddingOptions) {
+                    paddingMode.addEventListener('change', function() {
+                        paddingOptions.style.display = this.value === 'custom' ? 'block' : 'none';
                     });
                 }
             });
@@ -642,6 +732,13 @@ class Clear_Pop_Metabox {
                         <?php _e('After 30 days', 'clear-pop'); ?>
                     </label>
                 </div>
+
+                <div class="trigger-radio-option">
+                    <input type="radio" name="cookie_duration" id="cookie_always" value="always" <?php checked($cookie_duration, 'always'); ?>>
+                    <label for="cookie_always" style="font-weight: normal; margin: 0;">
+                        <?php _e('Testing — Every refresh (ignores cookies, always shows)', 'clear-pop'); ?>
+                    </label>
+                </div>
             </div>
         </div>
 
@@ -898,7 +995,12 @@ class Clear_Pop_Metabox {
             'popup_close_style',
             'popup_close_border',
             'popup_close_button_width',
+            'popup_close_button_width_tablet',
+            'popup_close_button_width_mobile',
             'popup_content_padding',
+            'popup_content_padding_value',
+            'popup_content_padding_value_tablet',
+            'popup_content_padding_value_mobile',
             'popup_border_radius_value',
             'popup_border_radius_unit',
         );
@@ -933,6 +1035,20 @@ class Clear_Pop_Metabox {
                 continue;
             }
 
+            if (in_array($field, array('popup_content_padding_value', 'popup_content_padding_value_tablet', 'popup_content_padding_value_mobile'), true)) {
+                $raw = trim(wp_unslash($_POST[$field]));
+
+                if ($raw === '') {
+                    delete_post_meta($post_id, '_' . $field);
+                    continue;
+                }
+
+                $number = absint($raw);
+
+                update_post_meta($post_id, '_' . $field, $number);
+                continue;
+            }
+
             if ('popup_height_value' === $field) {
                 $raw = trim(wp_unslash($_POST[$field]));
 
@@ -954,7 +1070,7 @@ class Clear_Pop_Metabox {
             $value = sanitize_text_field($_POST[$field]);
 
             if ('popup_content_padding' === $field) {
-                $allowed = array('default', 'none');
+                $allowed = array('default', 'none', 'custom');
                 if (!in_array($value, $allowed, true)) {
                     continue;
                 }
@@ -1006,7 +1122,7 @@ class Clear_Pop_Metabox {
                 continue;
             }
 
-            if ('popup_close_button_width' === $field) {
+            if (in_array($field, array('popup_close_button_width', 'popup_close_button_width_tablet', 'popup_close_button_width_mobile'), true)) {
                 $raw = trim(wp_unslash($_POST[$field]));
 
                 if ($raw === '') {
@@ -1128,7 +1244,7 @@ class Clear_Pop_Metabox {
         // Cookie Duration
         if (isset($_POST['cookie_duration'])) {
             $cookie_duration = sanitize_text_field($_POST['cookie_duration']);
-            $allowed_durations = array('never', 'session', '1hour', '24hours', '7days', '30days');
+            $allowed_durations = array('never', 'session', '1hour', '24hours', '7days', '30days', 'always');
             if (in_array($cookie_duration, $allowed_durations, true)) {
                 update_post_meta($post_id, '_cookie_duration', $cookie_duration);
             }

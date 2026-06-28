@@ -207,6 +207,11 @@
      * Check if popup should be shown based on cookie
      */
     function shouldShowPopup(popupId, duration) {
+        // Testing mode: always show, ignore cookies entirely
+        if (duration === 'always') {
+            return true;
+        }
+
         const cookieName = 'clear_pop_' + popupId;
         const cookieValue = getCookie(cookieName);
 
@@ -392,6 +397,11 @@
      * Set popup cookie client-side on close
      */
     function setPopupCloseCookie(popupId, closeMethod, duration) {
+        // Testing mode: never persist a suppression cookie so the popup keeps showing
+        if (duration === 'always') {
+            return;
+        }
+
         var cookieName = 'clear_pop_' + popupId;
         var data = {
             popup_id: popupId,

@@ -13,14 +13,11 @@
     }
     
     function init() {
-        // Get all trigger elements (both old and new class patterns)
+        // Attach click handlers to triggers (both old and new class patterns).
+        // May be empty: auto-triggered popups (time delay/scroll/exit-intent) are
+        // opened by triggers.js and have no on-page trigger element — but the
+        // close/overlay/ESC handlers below must still be bound.
         const triggers = document.querySelectorAll('.hsp-popup-trigger, [class*="hsp-popup-trigger-"]');
-        
-        if (!triggers.length) {
-            return;
-        }
-        
-        // Attach click handlers to triggers
         triggers.forEach(function(trigger) {
             trigger.addEventListener('click', handleTriggerClick);
         });

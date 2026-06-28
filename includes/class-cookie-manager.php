@@ -49,6 +49,11 @@ class Clear_Pop_Cookie_Manager {
     public function should_show_popup($popup_id, $duration_setting) {
         $cookie_name = self::COOKIE_PREFIX . $popup_id;
 
+        // Testing mode: always show, ignore any existing cookie
+        if ('always' === $duration_setting) {
+            return true;
+        }
+
         // No cookie set = show popup
         if (!isset($_COOKIE[$cookie_name])) {
             return true;
@@ -158,6 +163,11 @@ class Clear_Pop_Cookie_Manager {
         }
         if (empty($duration_setting)) {
             $duration_setting = 'never'; // Default
+        }
+
+        // Testing mode: never persist a suppression cookie so the popup keeps showing
+        if ('always' === $duration_setting) {
+            return;
         }
 
         // Calculate cookie expiry based on duration

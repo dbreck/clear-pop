@@ -3,7 +3,7 @@ Contributors: dbreck
 Tags: popup, modal, wpbakery, salient
 Requires at least: 5.0
 Tested up to: 6.4
-Stable tag: 1.6.0
+Stable tag: 1.7.0
 Requires PHP: 7.4
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -36,6 +36,17 @@ Clear Pop provides a clean, simple popup modal system designed for use with the 
 3. Go to Popups > Add New to create your first popup
 
 == Changelog ==
+
+= 1.7.0 =
+* Added responsive Close Button Width — separate Desktop / Tablet (<=1024px) / Mobile (<=767px) values (blank inherits desktop)
+* Added responsive Popup Padding — optional Tablet (<=1024px) and Mobile (<=767px) px overrides that win over the desktop padding mode at those breakpoints
+* Padding and close-button width now render via a per-popup scoped <style> block (#hsp-popup-<id>) instead of inline styles, so responsive media-query overrides apply reliably
+
+= 1.6.4 =
+* Fixed close button / overlay-click / ESC not binding on auto-triggered popups (init bailed when no on-page click-trigger existed)
+* Added "Custom (set amount)" Popup Padding option
+* Added "Testing — Every refresh" cookie duration option (bypasses cookies entirely; never writes a suppression cookie)
+* Changed close-button focus ring to :focus-visible (no ring on mouse click, still shown for keyboard nav)
 
 = 1.6.0 =
 * Added Popup Background Color setting (inherits the Salient theme background when left blank)

@@ -103,7 +103,12 @@ class Clear_Pop_Modal_Renderer {
         $close_style = get_post_meta($popup->ID, '_popup_close_style', true) ?: 'light';
         $close_border = get_post_meta($popup->ID, '_popup_close_border', true);
         $close_button_width = get_post_meta($popup->ID, '_popup_close_button_width', true);
+        $close_button_width_tablet = get_post_meta($popup->ID, '_popup_close_button_width_tablet', true);
+        $close_button_width_mobile = get_post_meta($popup->ID, '_popup_close_button_width_mobile', true);
         $padding = get_post_meta($popup->ID, '_popup_content_padding', true) ?: 'default';
+        $padding_value = get_post_meta($popup->ID, '_popup_content_padding_value', true);
+        $padding_value_tablet = get_post_meta($popup->ID, '_popup_content_padding_value_tablet', true);
+        $padding_value_mobile = get_post_meta($popup->ID, '_popup_content_padding_value_mobile', true);
         $border_radius_value = get_post_meta($popup->ID, '_popup_border_radius_value', true);
         $border_radius_unit = get_post_meta($popup->ID, '_popup_border_radius_unit', true) ?: 'px';
         $allowed_radius_units = array('px', 'rem', 'em', 'vw', '%');
@@ -138,8 +143,59 @@ class Clear_Pop_Modal_Renderer {
         // Get content
         $content = apply_filters('the_content', $popup->post_content);
         
-        $padding_class = ('none' === $padding) ? 'hsp-popup-padding-none' : 'hsp-popup-padding-default';
-        
+        if ('none' === $padding) {
+            $padding_class = 'hsp-popup-padding-none';
+        } elseif ('custom' === $padding) {
+            $padding_class = 'hsp-popup-padding-custom';
+        } else {
+            $padding_class = 'hsp-popup-padding-default';
+        }
+
+        // Padding + close-button-width are emitted in a per-popup scoped <style>
+        // block (keyed off #hsp-popup-<ID>) rather than inline, so the responsive
+        // Tablet/Mobile overrides can be expressed as media queries. A stylesheet
+        // !important can't beat an inline !important, so the desktop custom padding
+        // lives here too (an #id .class !important rule out-specifies the modal.css
+        // base rules without needing inline). No padding inline attr is used.
+        $content_inner_attr = '';
+        $pid       = '#hsp-popup-' . intval($popup->ID);
+        $css_rules = array();
+
+        // Desktop custom padding (was inline). Only emitted for the 'custom' mode;
+        // 'default'/'none' are handled by their container classes in modal.css.
+        if ('custom' === $padding && '' !== $padding_value && is_numeric($padding_value)) {
+            $css_rules[] = $pid . ' .hsp-popup-content-inner { padding: ' . absint($padding_value) . 'px !important; }';
+        }
+
+        // Tablet (<=1024px) and Mobile (<=767px) overrides. Each overrides the
+        // padding/width regardless of the desktop mode; blank = inherit.
+        $tablet_css = array();
+        $mobile_css = array();
+
+        if ('' !== $padding_value_tablet && is_numeric($padding_value_tablet)) {
+            $tablet_css[] = $pid . ' .hsp-popup-content-inner { padding: ' . absint($padding_value_tablet) . 'px !important; }';
+        }
+        if ('' !== $padding_value_mobile && is_numeric($padding_value_mobile)) {
+            $mobile_css[] = $pid . ' .hsp-popup-content-inner { padding: ' . absint($padding_value_mobile) . 'px !important; }';
+        }
+        if ('' !== $close_button_width_tablet && is_numeric($close_button_width_tablet)) {
+            $tablet_css[] = $pid . ' .hsp-popup-close { width: ' . absint($close_button_width_tablet) . 'px !important; height: auto !important; aspect-ratio: 1 !important; }';
+        }
+        if ('' !== $close_button_width_mobile && is_numeric($close_button_width_mobile)) {
+            $mobile_css[] = $pid . ' .hsp-popup-close { width: ' . absint($close_button_width_mobile) . 'px !important; height: auto !important; aspect-ratio: 1 !important; }';
+        }
+
+        if (!empty($tablet_css)) {
+            $css_rules[] = '@media (max-width: 1024px) { ' . implode(' ', $tablet_css) . ' }';
+        }
+        if (!empty($mobile_css)) {
+            $css_rules[] = '@media (max-width: 767px) { ' . implode(' ', $mobile_css) . ' }';
+        }
+
+        $popup_css = !empty($css_rules)
+            ? '<style id="hsp-popup-css-' . intval($popup->ID) . '">' . implode("\n", $css_rules) . '</style>' . "\n"
+            : '';
+
         $container_classes = array(
             'hsp-popup-container',
             'hsp-popup-size-' . sanitize_html_class($size),
@@ -200,6 +256,7 @@ class Clear_Pop_Modal_Renderer {
         }
 
         ?>
+        <?php echo $popup_css; ?>
         <div class="hsp-popup-overlay" id="hsp-popup-<?php echo esc_attr($popup->ID); ?>" style="background-color: <?php echo esc_attr($rgba); ?>;" data-popup-id="<?php echo esc_attr($popup->ID); ?>" data-popup-slug="<?php echo esc_attr($popup->post_name); ?>">
             <div class="<?php echo esc_attr(implode(' ', $container_classes)); ?>"<?php echo $style_attr; ?>>
                 <button class="<?php echo esc_attr(implode(' ', $close_classes)); ?>"<?php echo $close_style_attr; ?> aria-label="<?php esc_attr_e('Close', 'clear-pop'); ?>">
@@ -208,7 +265,7 @@ class Clear_Pop_Modal_Renderer {
                     </svg>
                 </button>
                 <div class="hsp-popup-content nectar-global-section">
-                    <div class="hsp-popup-content-inner">
+                    <div class="hsp-popup-content-inner"<?php echo $content_inner_attr; ?>>
                         <?php echo $content; ?>
                     </div>
                 </div>

@@ -153,6 +153,11 @@
 }
 
 .hsp-popup-close:focus {
+    outline: none;
+}
+
+/* Only show the focus ring for keyboard navigation, not mouse clicks */
+.hsp-popup-close:focus-visible {
     outline: 2px solid currentColor;
     outline-offset: 2px;
 }
