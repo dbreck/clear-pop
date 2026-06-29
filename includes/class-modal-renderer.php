@@ -21,6 +21,51 @@ class Clear_Pop_Modal_Renderer {
     
     private function __construct() {
         add_action('wp_footer', array($this, 'render_popups'));
+        // Lazy-load endpoint: returns a popup's rendered body for injection on open.
+        add_action('wp_ajax_clearpop_content', array($this, 'ajax_render_content'));
+        add_action('wp_ajax_nopriv_clearpop_content', array($this, 'ajax_render_content'));
+    }
+
+    /**
+     * AJAX: render and return a single popup's body HTML.
+     *
+     * The body (which may contain a Gravity Form whose element IDs would collide
+     * with an inline copy of the same form) is kept out of the initial page DOM
+     * and fetched here the first time the popup opens. Returns raw HTML for direct
+     * injection by modal.js. Echoing the body twice is avoided because the footer
+     * render discards its output (see render_single_popup()).
+     */
+    public function ajax_render_content() {
+        $popup_id = isset($_GET['popup_id']) ? absint($_GET['popup_id']) : 0;
+
+        check_ajax_referer('clearpop_content', 'nonce');
+
+        $popup = $popup_id ? get_post($popup_id) : null;
+        if (!$popup || 'hsp_popup' !== $popup->post_type || 'publish' !== $popup->post_status) {
+            status_header(404);
+            wp_die('', '', array('response' => 404));
+        }
+
+        // admin-ajax.php runs in an is_admin() context, where WPBakery does NOT
+        // auto-register its mapped shortcodes — without this, [vc_row]/[vc_column]
+        // etc. would pass through the_content as raw text. Force-register them so
+        // the content renders exactly as it does on the front end.
+        if (class_exists('WPBMap') && method_exists('WPBMap', 'addAllMappedShortcodes')) {
+            WPBMap::addAllMappedShortcodes();
+        }
+
+        // Match the front-end render: prime Salient's per-popup CSS, then render
+        // the content through the_content so shortcodes/forms output normally.
+        if (class_exists('Salient_Core')) {
+            do_action('nectar_store_post_page_css', $popup->ID);
+        }
+
+        $content = apply_filters('the_content', $popup->post_content);
+
+        nocache_headers();
+        header('Content-Type: text/html; charset=' . get_option('blog_charset'));
+        echo $content;
+        wp_die();
     }
     
     /**
@@ -139,10 +184,17 @@ class Clear_Pop_Modal_Renderer {
             // Trigger Salient's shortcode CSS generation
             do_action('nectar_store_post_page_css', $popup->ID);
         }
-        
-        // Get content
+
+        // Render the content here purely for its SIDE EFFECTS — running
+        // `the_content` makes Gravity Forms (and other shortcodes) enqueue their
+        // scripts/styles for this page, exactly as before. The rendered markup is
+        // intentionally DISCARDED: the body is lazy-loaded over AJAX on first open
+        // (see ajax_render_content() + modal.js). This keeps the heavy markup —
+        // and any embedded form's duplicate element IDs — out of the initial DOM
+        // until the popup is actually opened.
         $content = apply_filters('the_content', $popup->post_content);
-        
+        unset($content);
+
         if ('none' === $padding) {
             $padding_class = 'hsp-popup-padding-none';
         } elseif ('custom' === $padding) {
@@ -258,15 +310,17 @@ class Clear_Pop_Modal_Renderer {
         ?>
         <?php echo $popup_css; ?>
         <div class="hsp-popup-overlay" id="hsp-popup-<?php echo esc_attr($popup->ID); ?>" style="background-color: <?php echo esc_attr($rgba); ?>;" data-popup-id="<?php echo esc_attr($popup->ID); ?>" data-popup-slug="<?php echo esc_attr($popup->post_name); ?>">
-            <div class="<?php echo esc_attr(implode(' ', $container_classes)); ?>"<?php echo $style_attr; ?>>
+            <div class="<?php echo esc_attr(implode(' ', $container_classes)); ?>" role="dialog" aria-modal="true" aria-label="<?php echo esc_attr($popup->post_title); ?>" tabindex="-1"<?php echo $style_attr; ?>>
                 <button class="<?php echo esc_attr(implode(' ', $close_classes)); ?>"<?php echo $close_style_attr; ?> aria-label="<?php esc_attr_e('Close', 'clear-pop'); ?>">
                     <svg width="60%" height="60%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                 </button>
                 <div class="hsp-popup-content nectar-global-section">
-                    <div class="hsp-popup-content-inner"<?php echo $content_inner_attr; ?>>
-                        <?php echo $content; ?>
+                    <div class="hsp-popup-content-inner" data-lazy="1" data-popup-id="<?php echo esc_attr($popup->ID); ?>"<?php echo $content_inner_attr; ?>>
+                        <div class="hsp-popup-loading" aria-live="polite">
+                            <span class="hsp-popup-spinner" role="status" aria-label="<?php esc_attr_e('Loading', 'clear-pop'); ?>"></span>
+                        </div>
                     </div>
                 </div>
             </div>

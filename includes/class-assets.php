@@ -73,12 +73,13 @@ class Clear_Pop_Assets {
             $trigger_handler->get_localized_data()
         );
 
-        // Localize AJAX URL
+        // Localize AJAX URL + nonce (used by modal.js to lazy-load popup bodies)
         wp_localize_script(
             'clear-pop-triggers',
             'clearPopAjax',
             array(
-                'ajax_url' => admin_url('admin-ajax.php')
+                'ajax_url' => admin_url('admin-ajax.php'),
+                'nonce'    => wp_create_nonce('clearpop_content'),
             )
         );
 

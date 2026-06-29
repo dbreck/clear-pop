@@ -143,17 +143,175 @@
             }
         });
 
+        // Remember the trigger so focus can return to it on close.
+        hspPrevFocus = document.activeElement;
+
         popup.classList.add('hsp-active');
         document.body.classList.add('hsp-popup-open');
 
-        // Initialize WPBakery tabs if present (with optional specific tab index)
-        initWPBakeryTabs(popup, tabIndex);
+        // Dialog focus management: isolate the background and trap Tab.
+        hspBackgroundInert(popup, true);
+        document.addEventListener('keydown', hspTrapKeydown, true);
 
-        // Trigger custom event
-        const event = new CustomEvent('hspPopupOpen', {
-            detail: { popup: popup, tabIndex: tabIndex }
+        // Lazy-load the body on first open (spinner shows until it arrives), then
+        // wire up tabs, move focus into the dialog, and fire the open event.
+        // Already-loaded / non-lazy popups resolve immediately.
+        ensureContentLoaded(popup).then(function() {
+            // Initialize WPBakery tabs if present (with optional specific tab index)
+            initWPBakeryTabs(popup, tabIndex);
+
+            // Move focus into the dialog once its content exists.
+            window.requestAnimationFrame(function() {
+                if (!popup.classList.contains('hsp-active')) { return; }
+                var closeBtn = popup.querySelector('.hsp-popup-close');
+                var dialog = popup.querySelector('[role="dialog"]') || popup;
+                (closeBtn || dialog).focus();
+            });
+
+            // Trigger custom event
+            const event = new CustomEvent('hspPopupOpen', {
+                detail: { popup: popup, tabIndex: tabIndex }
+            });
+            document.dispatchEvent(event);
         });
-        document.dispatchEvent(event);
+    }
+
+    // ---- Dialog focus management ------------------------------------------------
+    var hspPrevFocus = null;
+    var HSP_FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+    function hspFocusable(container) {
+        return Array.prototype.filter.call(
+            container.querySelectorAll(HSP_FOCUSABLE),
+            function(el) { return el.offsetWidth > 0 || el.offsetHeight > 0; }
+        );
+    }
+
+    // Trap Tab/Shift+Tab inside the active popup (capture phase).
+    function hspTrapKeydown(e) {
+        if (e.key !== 'Tab') { return; }
+        var popup = document.querySelector('.hsp-popup-overlay.hsp-active');
+        if (!popup) { return; }
+        var f = hspFocusable(popup);
+        if (!f.length) { e.preventDefault(); return; }
+        var first = f[0], last = f[f.length - 1];
+        if (!popup.contains(document.activeElement)) { e.preventDefault(); first.focus(); return; }
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+
+    // Make everything in <body> except the overlay inert + aria-hidden while open.
+    function hspBackgroundInert(popup, on) {
+        var kids = document.body.children;
+        for (var i = 0; i < kids.length; i++) {
+            var el = kids[i];
+            if (el === popup || el.tagName === 'SCRIPT' || el.tagName === 'STYLE' || el.tagName === 'LINK') { continue; }
+            if (on) {
+                if (el.hasAttribute('data-hsp-inert')) { continue; }
+                if (el.hasAttribute('aria-hidden')) { el.setAttribute('data-hsp-kept-ah', '1'); }
+                el.setAttribute('aria-hidden', 'true');
+                el.setAttribute('inert', '');
+                el.setAttribute('data-hsp-inert', '1');
+            } else if (el.getAttribute('data-hsp-inert') === '1') {
+                el.removeAttribute('inert');
+                if (el.getAttribute('data-hsp-kept-ah') === '1') { el.removeAttribute('data-hsp-kept-ah'); }
+                else { el.removeAttribute('aria-hidden'); }
+                el.removeAttribute('data-hsp-inert');
+            }
+        }
+    }
+
+    /**
+     * Lazy-load a popup's body the first time it opens.
+     *
+     * The body is rendered server-side via admin-ajax (clearpop_content) and
+     * injected here, so heavy markup — and any embedded Gravity Form whose
+     * element IDs would otherwise duplicate an inline copy of the same form —
+     * stays out of the initial page DOM until needed. Returns a Promise that
+     * resolves once the content is in place (or immediately when there is
+     * nothing to load).
+     */
+    function ensureContentLoaded(popup) {
+        const inner = popup.querySelector('.hsp-popup-content-inner');
+
+        // Non-lazy or already loaded: nothing to do.
+        if (!inner || inner.getAttribute('data-lazy') !== '1' || inner.getAttribute('data-loaded') === '1') {
+            return Promise.resolve();
+        }
+        // A load is already in flight (or done) for this popup.
+        if (inner._loadingPromise) {
+            return inner._loadingPromise;
+        }
+
+        const cfg = window.clearPopAjax || {};
+        const popupId = inner.getAttribute('data-popup-id');
+        if (!cfg.ajax_url || !cfg.nonce || !popupId) {
+            // Misconfigured — fail soft so the popup still opens (just empty).
+            inner.setAttribute('data-loaded', '1');
+            inner.innerHTML = '';
+            return Promise.resolve();
+        }
+
+        const url = cfg.ajax_url +
+            '?action=clearpop_content&popup_id=' + encodeURIComponent(popupId) +
+            '&nonce=' + encodeURIComponent(cfg.nonce);
+
+        inner._loadingPromise = fetch(url, { credentials: 'same-origin' })
+            .then(function(res) {
+                if (!res.ok) { throw new Error('HTTP ' + res.status); }
+                return res.text();
+            })
+            .then(function(html) {
+                setHtmlWithScripts(inner, html);
+                inner.setAttribute('data-loaded', '1');
+                reinitGravityForms(inner);
+                // Nudge any layout-sensitive embeds (sliders, maps, GF) to recalc.
+                if (window.jQuery) { jQuery(window).trigger('resize'); }
+            })
+            .catch(function(err) {
+                if (window.console) { console.error('[clear-pop] lazy load failed:', err); }
+                inner.innerHTML = '<div class="hsp-popup-error" role="alert">Sorry — this content could not be loaded. Please refresh and try again.</div>';
+            });
+
+        return inner._loadingPromise;
+    }
+
+    /**
+     * Replace a container's HTML and execute any <script> tags it contains.
+     * innerHTML alone does not run injected scripts, so we recreate them.
+     */
+    function setHtmlWithScripts(container, html) {
+        container.innerHTML = html;
+        const scripts = container.querySelectorAll('script');
+        scripts.forEach(function(oldScript) {
+            const newScript = document.createElement('script');
+            if (oldScript.src) {
+                newScript.src = oldScript.src;
+            } else {
+                newScript.textContent = oldScript.textContent;
+            }
+            if (oldScript.type) { newScript.type = oldScript.type; }
+            oldScript.parentNode.replaceChild(newScript, oldScript);
+        });
+    }
+
+    /**
+     * Re-initialize any Gravity Forms that arrived in the injected content.
+     * Gravity Forms' JS framework is already enqueued on the page (the footer
+     * render primes it); here we just (re)fire its post-render hook so field
+     * styling, masking and conditional logic bind to the now-live form.
+     */
+    function reinitGravityForms(container) {
+        if (!window.jQuery) { return; }
+        const forms = container.querySelectorAll('form[id^="gform_"]');
+        forms.forEach(function(form) {
+            const match = form.id.match(/gform_(\d+)/);
+            if (match) {
+                try {
+                    jQuery(document).trigger('gform_post_render', [parseInt(match[1], 10), 1]);
+                } catch (e) { /* non-fatal */ }
+            }
+        });
     }
 
     /**
@@ -230,13 +388,22 @@
      */
     function closePopup(popup) {
         popup.classList.remove('hsp-active');
-        
+
         // Remove body lock if no other popups are open
         const stillOpen = document.querySelectorAll('.hsp-popup-overlay.hsp-active');
         if (!stillOpen.length) {
             document.body.classList.remove('hsp-popup-open');
         }
-        
+
+        // Tear down focus management: stop trapping, restore the background, and
+        // return focus to whatever opened the popup.
+        document.removeEventListener('keydown', hspTrapKeydown, true);
+        hspBackgroundInert(popup, false);
+        if (hspPrevFocus && typeof hspPrevFocus.focus === 'function') {
+            hspPrevFocus.focus();
+        }
+        hspPrevFocus = null;
+
         // Trigger custom event
         const event = new CustomEvent('hspPopupClose', {
             detail: { popup: popup }

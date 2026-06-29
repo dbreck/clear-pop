@@ -245,3 +245,45 @@ body.hsp-popup-open {
         transform: translateY(0);
     }
 }
+
+/* -------------------------------------------------------------------------
+   Lazy-load spinner + error (shown while the popup body is fetched on open)
+   ------------------------------------------------------------------------- */
+.hsp-popup-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 180px;
+    padding: 40px;
+    width: 100%;
+}
+
+.hsp-popup-spinner {
+    display: inline-block;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    /* Neutral track visible on both light and dark popups; head uses text colour. */
+    border: 3px solid rgba(127, 127, 127, 0.25);
+    border-top-color: currentColor;
+    animation: hspPopupSpin 0.8s linear infinite;
+}
+
+.hsp-popup-error {
+    padding: 32px 24px;
+    text-align: center;
+}
+
+@keyframes hspPopupSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Respect the user's OS-level "Reduce motion" preference (WCAG 2.3.3): keep a
+   gentle spin so the loading state is still legible, but slow it right down. */
+@media (prefers-reduced-motion: reduce) {
+    .hsp-popup-spinner {
+        animation-duration: 2.4s;
+    }
+}

@@ -3,7 +3,7 @@ Contributors: dbreck
 Tags: popup, modal, wpbakery, salient
 Requires at least: 5.0
 Tested up to: 6.4
-Stable tag: 1.7.0
+Stable tag: 1.8.0
 Requires PHP: 7.4
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -36,6 +36,12 @@ Clear Pop provides a clean, simple popup modal system designed for use with the 
 3. Go to Popups > Add New to create your first popup
 
 == Changelog ==
+
+= 1.8.0 =
+* Popup bodies now lazy-load over AJAX on first open (with a loading spinner) instead of being printed into the page at load. This keeps heavy markup — and, critically, any embedded Gravity Form whose element IDs would otherwise collide with an inline copy of the same form on the page — out of the initial DOM, fixing duplicate-ID accessibility/validation errors at page load.
+* The footer still renders popup content once for its side effects only (priming Gravity Forms / Salient asset enqueue) and discards the markup, so script/style enqueue is unchanged.
+* AJAX render force-registers WPBakery mapped shortcodes (WPBMap::addAllMappedShortcodes) so content renders correctly in the is_admin() admin-ajax context.
+* Note: on a page that ALSO embeds the same form inline, opening the popup re-introduces the shared IDs only while the popup is open; load-time and popup-only pages are fully clean.
 
 = 1.7.0 =
 * Added responsive Close Button Width — separate Desktop / Tablet (<=1024px) / Mobile (<=767px) values (blank inherits desktop)
