@@ -201,6 +201,15 @@
 }
 
 /* Close button border */
+/* When the "Add Border to Close Button" option is OFF (no .hsp-popup-close-border
+   class), force no border. The close button is a <button>, so a theme's global
+   button styling — e.g. Salient's rounded / see-through button border — can paint
+   a ring the setting is supposed to suppress. !important + the :not() guard kills
+   that without affecting the opt-in border below. */
+.hsp-popup-close:not(.hsp-popup-close-border) {
+    border: none !important;
+}
+
 .hsp-popup-close-border {
     border: solid 1px currentColor;
     border-radius: 4px;

@@ -38,8 +38,17 @@ class Clear_Pop_Modal_Renderer {
     public function ajax_render_content() {
         $popup_id = isset($_GET['popup_id']) ? absint($_GET['popup_id']) : 0;
 
-        check_ajax_referer('clearpop_content', 'nonce');
-
+        // NOTE: deliberately NO nonce check. This endpoint returns PUBLIC popup
+        // body HTML to anonymous visitors and is GET + cacheable, so a per-user
+        // nonce is the wrong tool and actively breaks under caching:
+        //   - A nonce baked into a full-page-cached document expires (~24h),
+        //     after which every anonymous visitor's lazy-load 403s site-wide.
+        //   - Even for a "logged out" visitor, a stale wordpress_logged_in
+        //     cookie poisons wp_get_session_token(), so the nonce computed at
+        //     verify time no longer matches the one rendered into the page.
+        // The content is public and this is a read (no state change, no private
+        // data), so validating that the request targets a PUBLISHED popup is the
+        // appropriate protection — an unpublished/non-popup id is rejected below.
         $popup = $popup_id ? get_post($popup_id) : null;
         if (!$popup || 'hsp_popup' !== $popup->post_type || 'publish' !== $popup->post_status) {
             status_header(404);

@@ -37,6 +37,10 @@ Clear Pop provides a clean, simple popup modal system designed for use with the 
 
 == Changelog ==
 
+= 1.8.1 =
+* Fix: when "Add Border to Close Button" is OFF, the close button now forces `border: none !important`. The close button is a <button>, so a theme's global button styling (e.g. Salient's rounded / see-through button border) could paint a border the setting was meant to suppress, making the option look ignored. Scoped via :not(.hsp-popup-close-border) so the opt-in border still works when checked.
+* Fix: the AJAX popup-body endpoint (clearpop_content) no longer requires a nonce. Popup bodies are public content served to anonymous visitors over a cacheable GET, so a per-user nonce was both unnecessary and actively broke the lazy-load: a nonce baked into a full-page-cached document expires (~24h) and 403s every visitor site-wide, and a stale wordpress_logged_in cookie poisons the session token so even "logged out" visitors fail verification. The request is now validated by confirming it targets a PUBLISHED hsp_popup (unpublished/non-popup ids still 404) — appropriate protection for a public, side-effect-free read. No change to accessibility (dialog roles/focus management) or any other behavior.
+
 = 1.8.0 =
 * Popup bodies now lazy-load over AJAX on first open (with a loading spinner) instead of being printed into the page at load. This keeps heavy markup — and, critically, any embedded Gravity Form whose element IDs would otherwise collide with an inline copy of the same form on the page — out of the initial DOM, fixing duplicate-ID accessibility/validation errors at page load.
 * The footer still renders popup content once for its side effects only (priming Gravity Forms / Salient asset enqueue) and discards the markup, so script/style enqueue is unchanged.
