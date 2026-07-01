@@ -162,6 +162,15 @@
     outline-offset: 2px;
 }
 
+/* The dialog container is focused programmatically on open (it carries
+   tabindex="-1" so screen readers announce it) — it is NOT Tab-reachable, so
+   suppressing its focus outline loses no keyboard affordance and prevents a
+   stray ring around the whole panel. Keyboard focus rings on the actual
+   controls inside are unaffected. */
+.hsp-popup-overlay [role="dialog"]:focus {
+    outline: none;
+}
+
 /* Close button positions */
 .hsp-popup-close-top-right {
     top: 15px;

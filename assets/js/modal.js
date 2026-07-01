@@ -163,9 +163,16 @@
             // Move focus into the dialog once its content exists.
             window.requestAnimationFrame(function() {
                 if (!popup.classList.contains('hsp-active')) { return; }
-                var closeBtn = popup.querySelector('.hsp-popup-close');
+                // Focus the labeled dialog container (role="dialog", tabindex="-1"),
+                // NOT the close button. Programmatically focusing the close button
+                // makes the browser paint its :focus-visible ring after the lazy-load
+                // layout shift — it looks like a stray border on the close button when
+                // the popup is opened by mouse. Focusing the dialog is the recommended
+                // ARIA pattern (screen readers announce it via aria-label) and leaves
+                // the close button's keyboard focus ring fully intact — that ring now
+                // only appears when a keyboard user actually Tabs to the button.
                 var dialog = popup.querySelector('[role="dialog"]') || popup;
-                (closeBtn || dialog).focus();
+                dialog.focus();
             });
 
             // Trigger custom event
